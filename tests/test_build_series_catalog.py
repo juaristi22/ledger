@@ -496,7 +496,7 @@ def test_registry_chain_validation(tmp_path: pathlib.Path) -> None:
     path.write_text(
         json.dumps(mint) + "\n" + json.dumps(no_note) + "\n", encoding="utf-8"
     )
-    with pytest.raises(SystemExit, match="requires a note"):
+    with pytest.raises(SystemExit, match="requires a substantive note"):
         bsc.UuidRegistry.load(path)
 
 
@@ -748,16 +748,16 @@ def test_committed_catalog_is_current_and_valid() -> None:
     assert bsc.validate_uuids(committed) == []
     assert bsc.registry_agreement_problems(committed, registry) == []
     assert committed["suspect_segments"] == []
-    # Every stripped segment that was a window-overlap judgment (rather
-    # than a direct spelling of the row period) stays auditable.
-    assert committed["overlap_stripped_segments"] == [
-        "2026-06-18",
-        "2026_06_18",
-        "after_june_2026",
-        "after_mpc_june_2026",
-        "february_to_april_2026",
-        "week_2026-06-13",
-        "week_2026_06_13",
+    # EVERY stripped spelling is auditable — a statute or edition label
+    # that collides with a period spelling can only be caught here.
+    assert committed["stripped_segments"] == [
+        "2026-05", "2026-06", "2026-06-18", "2026-07", "2026_05",
+        "2026_06", "2026_06_18", "2026_q2", "after_june_2026",
+        "after_mpc_june_2026", "april_2026", "feb_2026",
+        "february_to_april_2026", "fy2024", "fy2025", "june_2026",
+        "may_2026", "q1_2026", "week_2026-06-13", "week_2026-06-20",
+        "week_2026-06-27", "week_2026-07-04", "week_2026-07-11",
+        "week_2026-07-18", "week_2026-07-25", "week_2026_06_13",
         "week_ending_2026_06_06",
     ]
     assert committed["docket_seed_sha256"] is not None
@@ -780,3 +780,342 @@ def test_rebuild_without_prior_catalog_is_gated(
     assert bsc.main(
         argv + ["--allow-remint", "--remint-note", "rebuild from registry"]
     ) == 0
+
+
+def _mint(concept: str, uuid: str, geography=None, entity=None) -> dict:
+    return {
+        "concept": concept,
+        "geography": geography,
+        "entity": entity,
+        "uuid": uuid,
+    }
+
+
+U1 = "aaaaaaaa-1111-4111-8111-111111111111"
+U2 = "bbbbbbbb-2222-4222-8222-222222222222"
+
+
+def test_mint_never_reuses_a_bound_uuid(tmp_path: pathlib.Path) -> None:
+    # Third-review repro: re-key identities and swap their prior-catalog
+    # UUIDs — both "new" identities would previously mint the swapped
+    # values as ordinary mints.
+    registry_entries = [
+        _mint("old.one", U1, entity={"name": "economy", "role": "aggregate"}),
+        _mint("old.two", U2, entity={"name": "economy", "role": "aggregate"}),
+    ]
+    existing = {
+        "series": [
+            {
+                "uuid": U2,  # swapped
+                "concept": "new.one",
+                "geography": dict(US),
+                "entity": {"name": "economy", "role": "aggregate"},
+                "aliases": [],
+                "status": "observed",
+            },
+            {
+                "uuid": U1,  # swapped
+                "concept": "new.two",
+                "geography": dict(US),
+                "entity": {"name": "economy", "role": "aggregate"},
+                "aliases": [],
+                "status": "observed",
+            },
+        ]
+    }
+    with pytest.raises(SystemExit, match="already binds"):
+        _build(
+            tmp_path,
+            [_row("new.one"), _row("new.two")],
+            existing=existing,
+            registry_entries=registry_entries,
+        )
+
+
+def test_registry_rejects_forged_shared_uuid_mint(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    path.write_text(
+        json.dumps(_mint("a.one", U1)) + "\n"
+        + json.dumps(_mint("a.two", U1)) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="reuses uuid"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_registry_rejects_duplicate_json_members(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    line = (
+        '{"concept": "a.one", "geography": null, "entity": null, '
+        f'"uuid": "{U1}", "uuid": "{U2}"}}'
+    )
+    path.write_text(line + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="not strict JSON"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_registry_requires_lf_discipline(tmp_path: pathlib.Path) -> None:
+    path = tmp_path / "registry.jsonl"
+    body = json.dumps(_mint("a.one", U1))
+    path.write_bytes(body.encode())  # no trailing newline
+    with pytest.raises(SystemExit, match="end with a newline"):
+        bsc.UuidRegistry.load(path)
+    path.write_bytes(body.encode() + b"\r\n")
+    with pytest.raises(SystemExit, match="LF-only"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_registry_rejects_hollow_notes_and_noop_supersedes(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    mint = _mint("a.one", U1)
+    hollow = dict(_mint("a.one", U2), supersedes=U1, note="​")
+    path.write_text(
+        json.dumps(mint) + "\n" + json.dumps(hollow) + "\n", encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="substantive note"):
+        bsc.UuidRegistry.load(path)
+    noop = dict(_mint("a.one", U1), supersedes=U1, note="says nothing changed")
+    path.write_text(
+        json.dumps(mint) + "\n" + json.dumps(noop) + "\n", encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="no-op"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_agreement_is_identity_aware(tmp_path: pathlib.Path) -> None:
+    # Rows carrying live UUIDs under the WRONG identities must fail even
+    # though every UUID is "present somewhere" in the catalog.
+    entries = [_mint("a.one", U1), _mint("a.two", U2)]
+    registry = _registry(tmp_path, entries)
+    catalog = {
+        "series": [
+            {"uuid": U1, "concept": "b.one", "geography": None, "entity": None},
+            {"uuid": U2, "concept": "b.two", "geography": None, "entity": None},
+        ]
+    }
+    problems = bsc.registry_agreement_problems(catalog, registry)
+    assert sum("no catalog row at its identity" in p for p in problems) == 2
+
+
+def test_enrichment_records_retire_and_succeeds_events(
+    tmp_path: pathlib.Path,
+) -> None:
+    seed = {
+        "series": [
+            {
+                "series": "census.m3.new_orders",
+                "cadence": "monthly",
+                "extras": {"country": "US", "targetUnit": "percent"},
+            }
+        ]
+    }
+    argv = _repo(tmp_path, [_row("bls.cps.unemployment_rate")], seed=seed)
+    assert bsc.main(argv) == 0
+    catalog = json.loads((tmp_path / "catalog.json").read_text())
+    placeholder_uuid = next(
+        r["uuid"] for r in catalog["series"] if r["status"] == "docket-only"
+    )
+    (tmp_path / "obs.jsonl").write_text(
+        "".join(
+            json.dumps(r) + "\n"
+            for r in [
+                _row("bls.cps.unemployment_rate"),
+                _row("census.m3.new_orders"),
+            ]
+        ),
+        encoding="utf-8",
+    )
+    assert bsc.main(argv) == 0  # enrichment needs no ceremony flag
+    catalog = json.loads((tmp_path / "catalog.json").read_text())
+    enriched = next(
+        r for r in catalog["series"] if r["concept"] == "census.m3.new_orders"
+    )
+    assert enriched["status"] == "observed"
+    assert enriched["uuid"] == placeholder_uuid
+    lines = [
+        json.loads(line)
+        for line in (tmp_path / "registry.jsonl").read_text().splitlines()
+    ]
+    retire = next(line for line in lines if line.get("retired"))
+    succeed = next(line for line in lines if line.get("succeeds"))
+    assert retire["uuid"] == succeed["uuid"] == placeholder_uuid
+    assert succeed["succeeds"]["concept"] == "census.m3.new_orders"
+    assert bsc.main(argv + ["--check"]) == 0
+
+
+def test_placeholder_with_conflicting_vintage_never_enriches(
+    tmp_path: pathlib.Path,
+) -> None:
+    existing = {
+        "series": [
+            {
+                "uuid": U1,
+                "concept": "labour.rate",
+                "geography": {"level": "country", "id": "0100000US",
+                              "vintage": "2020"},
+                "entity": None,
+                "aliases": [],
+                "status": "docket-only",
+            }
+        ]
+    }
+    catalog, plan = _build(
+        tmp_path,
+        [_row("labour.rate")],  # arrives with vintage "current"
+        existing=existing,
+        registry_entries=[
+            _mint(
+                "labour.rate",
+                U1,
+                geography={"level": "country", "id": "0100000US",
+                           "vintage": "2020"},
+            )
+        ],
+    )
+    observed = next(r for r in catalog["series"] if r["status"] == "observed")
+    assert observed["uuid"] != U1
+    # The stranded placeholder binding is a gated retire, never silent.
+    assert [e["uuid"] for e in plan["retire_pending"]] == [U1]
+
+
+def test_docket_claim_is_dimension_scoped(tmp_path: pathlib.Path) -> None:
+    gb_row = _row("boe.bank_rate", geography=dict(BRITAIN))
+    us_entry = {
+        "series": "boe.bank_rate",
+        "cadence": "monthly",
+        "extras": {"country": "US", "targetUnit": "percent"},
+    }
+    catalog, _ = _build(tmp_path, [gb_row], docket={"series": [us_entry]})
+    assert len(catalog["series"]) == 2  # GB observed + US docket-only
+    statuses = {
+        (r["geography"] or {}).get("id"): r["status"] for r in catalog["series"]
+    }
+    assert statuses == {"GB": "observed", "0100000US": "docket-only"}
+
+    undeclared = {"series": "boe.bank_rate", "cadence": "monthly"}
+    catalog, _ = _build(tmp_path, [gb_row], docket={"series": [undeclared]})
+    assert len(catalog["series"]) == 1  # no country claim: GB row claims
+
+    with pytest.raises(SystemExit, match="duplicate docket series id"):
+        _build(
+            tmp_path,
+            [gb_row],
+            docket={"series": [undeclared, dict(undeclared)]},
+        )
+
+
+def test_statute_spelling_stripped_but_audited(
+    tmp_path: pathlib.Path,
+) -> None:
+    # A statute/edition label spelling the row's own period is
+    # indistinguishable from a period label; it strips, but the spelling
+    # is published for curation rather than vanishing.
+    catalog, _ = _build(
+        tmp_path,
+        [_row("agency.statute.2026_05.rate",
+              rid="agency.statute.2026_05.rate.first_print")],
+    )
+    assert catalog["series"][0]["concept"] == "agency.statute.rate"
+    assert "2026_05" in catalog["stripped_segments"]
+
+
+@pytest.mark.parametrize(
+    "period",
+    [
+        {"type": "month", "value": "2026-13"},
+        {"type": "quarter", "value": "2026-13"},
+        {"type": "week_ending", "value": "2026-13-40"},
+    ],
+)
+def test_malformed_periods_are_hard_errors(
+    tmp_path: pathlib.Path, period: dict
+) -> None:
+    with pytest.raises(SystemExit, match="malformed period"):
+        _build(tmp_path, [_row("agency.rate", period=period)])
+
+
+def test_remint_of_retired_identity_stages_valid_chain(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Third-review repro: retire an identity, then bring it back with an
+    # edited prior-catalog UUID under --allow-remint. The writer must
+    # stage revive THEN supersede (a valid chain) — and staging always
+    # revalidates the whole registry before anything is written.
+    argv = _repo(tmp_path, [_row("bls.cps.unemployment_rate")])
+    assert bsc.main(argv) == 0
+    (tmp_path / "seed.json").write_text(
+        json.dumps({"series": []}), encoding="utf-8"
+    )
+    assert bsc.main(argv + ["--allow-remint", "--remint-note", "cut"]) == 0
+    (tmp_path / "seed.json").write_text(json.dumps(SEED), encoding="utf-8")
+    catalog = json.loads((tmp_path / "catalog.json").read_text())
+    # Hand-plant a divergent uuid for the returning docket identity.
+    replacement = "cccccccc-3333-4333-8333-333333333333"
+    lines = (tmp_path / "registry.jsonl").read_text().splitlines()
+    retired_uuid = json.loads(lines[-1])["uuid"]
+    catalog["series"].append(
+        {
+            "uuid": replacement,
+            "concept": "abs.labour.unemployment_rate",
+            "geography": bsc.COUNTRY_GEOGRAPHY["AU"],
+            "entity": None,
+            "aliases": [],
+            "status": "docket-only",
+        }
+    )
+    (tmp_path / "catalog.json").write_text(
+        json.dumps(catalog, indent=2) + "\n", encoding="utf-8"
+    )
+    assert bsc.main(argv) == 1  # gated
+    assert (
+        bsc.main(argv + ["--allow-remint", "--remint-note", "planned swap"])
+        == 0
+    )
+    events = [
+        json.loads(line)
+        for line in (tmp_path / "registry.jsonl").read_text().splitlines()
+    ]
+    revive = events[-2]
+    supersede = events[-1]
+    assert revive["revived"] is True and revive["uuid"] == retired_uuid
+    assert supersede["supersedes"] == retired_uuid
+    assert supersede["uuid"] == replacement
+    # The staged file reloads cleanly and the catalog checks green.
+    bsc.UuidRegistry.load(tmp_path / "registry.jsonl")
+    assert bsc.main(argv + ["--check"]) == 0
+
+
+def test_identity_uuid_map_matches_reviewed_anchor() -> None:
+    """The registry's introduction commit cannot be continuity-checked by
+    the append-only gate (there is no prior registry to extend), so the
+    identity->uuid map verified by the adversarial review of PR #128 is
+    pinned here. Changing ANY of the 201 bindings — or adding/retiring
+    one — must edit this constant in the same diff, making wholesale
+    remints impossible to slip through as regeneration noise.
+
+    Update the constant only alongside registry events that justify it.
+    """
+    import hashlib
+
+    catalog = json.loads(bsc.CATALOG.read_text(encoding="utf-8"))
+    lines = sorted(
+        json.dumps(
+            [
+                row["uuid"],
+                row["concept"],
+                bsc._geo_key(row.get("geography")),
+                bsc._entity_key(row.get("entity")),
+            ]
+        )
+        for row in catalog["series"]
+    )
+    digest = hashlib.sha256("\n".join(lines).encode()).hexdigest()
+    assert digest == (
+        "2d2552e88662eb654597999ac92f750cadbed882703324c6f9ca1f1e3ac15345"
+    )

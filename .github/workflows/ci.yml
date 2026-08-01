@@ -50,14 +50,21 @@ jobs:
       - name: Series UUID registry append-only vs base
         if: >-
           github.event_name == 'pull_request' ||
-          (github.event_name == 'push' &&
-           github.event.before != '0000000000000000000000000000000000000000')
+          github.event_name == 'push'
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request'
             && github.event.pull_request.base.sha
             || github.event.before }}
+          # New-branch pushes have an all-zero before-sha; they must still
+          # extend the canonical lineage's registry rather than skipping.
+          FALLBACK_REF: codex/thesis-ledger-facts
         run: |
-          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            git fetch --no-tags --depth=1 origin "$FALLBACK_REF"
+            BASE_SHA=FETCH_HEAD
+          else
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          fi
           if git cat-file -e "$BASE_SHA:ledger/series_uuid_registry.jsonl" \
               2>/dev/null; then
             git show "$BASE_SHA:ledger/series_uuid_registry.jsonl" \

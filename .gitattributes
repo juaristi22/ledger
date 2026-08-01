@@ -1,6 +1,13 @@
 # Files whose exact Git and working-tree bytes are hashed by the release chain.
 ledger/official_observations.jsonl text eol=lf
 ledger/immutable_prefix.json text eol=lf
+
+# Series-catalog surfaces: byte digests bind these files (catalog embeds the
+# registry digest; the registry's append-only check is a byte-prefix match),
+# so line endings must survive any checkout configuration.
+ledger/series_catalog.json text eol=lf
+ledger/series_uuid_registry.jsonl text eol=lf
+ledger/seeds/thesis_docket_series.json text eol=lf
 releases/manifests/*.json text eol=lf
 releases/anchors/*.pem text eol=lf
 

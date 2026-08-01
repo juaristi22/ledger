@@ -23,9 +23,13 @@ only grow:
 * in CI, ``--verify-registry-append-only BASE_FILE`` proves the PR keeps the
   base branch's registry as an exact byte prefix;
 * an identity may change or lose its UUID only through an explicit
-  ``--allow-remint --remint-note "..."`` run, which appends a supersede line
-  (``supersedes`` = the replaced UUID, chained per identity) so every remint
-  is a reviewable event, never a silent regeneration.
+  ``--allow-remint --remint-note "..."`` run, which appends chained
+  supersede/retire lines so every identity change is a reviewable event,
+  never a silent regeneration. UUIDs are never reused by ordinary mints;
+  the one sanctioned reuse is a retire + ``succeeds`` pair (placeholder
+  enrichment). Catalog rows and live bindings are kept in bijection —
+  same identity, same UUID, both directions — so re-keying or swapping
+  identities cannot pass ``--check``.
 
 Wholesale remints therefore fail ``--check`` twice over: the reminted
 catalog disagrees with the committed registry, and any registry rewrite
@@ -40,7 +44,13 @@ a calendar window (``fy2026``, ``2026-05``, ``2026_05_02``, ``may_2026``,
 ``after_mpc_june_2026``) that overlaps the row's period. Date-shaped
 segments that do NOT match the row's period — a disjoint window, or an
 impossible token like ``2026_13`` — are never stripped: they stay in the
-identity and are reported in ``suspect_segments`` for curation.
+identity and are reported in ``suspect_segments`` for curation. No strip
+is invisible either way: every distinct stripped spelling is published in
+``stripped_segments``, because a statute, cohort, or edition label that
+happens to spell the row's own period is mechanically indistinguishable
+from a period label — the audit list is where a curator catches that. A
+malformed period (month 13, an impossible week date) is a hard error, so
+corrupt metadata can never manufacture strippable tokens.
 
 Aliases are curated identity statements, not derived data. Observed concept
 spellings of one identity become aliases automatically; everything else in
@@ -57,15 +67,17 @@ Alias/concept inheritance is scoped to the SAME (geography, entity): a name
 match can heal a rename within one dimension slice but can never move a
 UUID across geographies or entities. The one documented exception is
 docket-placeholder enrichment: a docket-only row (no observations; entity
-unknown; geography absent or matching on level/id) may be claimed by the
-first observed rows of that series, which upgrade it in place, keep its
-UUID, and register the enriched identity.
+unknown; geography absent or matching on level/id, with no contradicting
+declared vintage) may be claimed by the first observed rows of that
+series, which upgrade it in place, keep its UUID, and record the move as
+a retire + ``succeeds`` event pair.
 
 Curated merges (two committed rows that are the same series) are performed
 by hand: delete the absorbed row, add its concept to the survivor's
 ``aliases``, regenerate with ``--allow-remint --remint-note``; the absorbed
 identity's observations inherit the survivor's UUID and the registry gains
-the supersede line.
+a retire line for the absorbed binding (its old UUID goes dormant with
+it).
 
 Inputs are pinned: the observation JSONL (``observations_sha256``), the
 committed docket seed at ``ledger/seeds/thesis_docket_series.json``
@@ -267,13 +279,18 @@ def period_token_variants(period: dict) -> set[str]:
         m = re.fullmatch(r"(\d{4})-(\d{2})", value)
         if m:
             year, month = m.group(1), int(m.group(2))
+            if not 1 <= month <= 12:
+                return tokens
             tokens.update({f"{year}-{month:02d}", f"{year}_{month:02d}"})
             tokens.add(f"{MONTHS_FULL[month - 1]}_{year}")
             tokens.add(f"{MONTHS_ABBREV[month - 1]}_{year}")
     elif ptype == "quarter":
         m = re.fullmatch(r"(\d{4})-(\d{2})", value)
         if m:
-            year, quarter = m.group(1), (int(m.group(2)) - 1) // 3 + 1
+            year, month = m.group(1), int(m.group(2))
+            if not 1 <= month <= 12:
+                return tokens
+            quarter = (month - 1) // 3 + 1
             tokens.update({f"q{quarter}_{year}", f"{year}_q{quarter}"})
     elif ptype == "week_ending":
         iso = value
@@ -506,6 +523,15 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
                 f"measure.concept: {json.dumps(row)[:200]}"
             )
         period = row.get("period") or {}
+        if (
+            period.get("value") is not None
+            and period_descriptor(period) is None
+        ):
+            raise SystemExit(
+                f"observation row {index} has a malformed period "
+                f"{json.dumps(period)} — refusing to derive period tokens "
+                "from it (fix the period type/value upstream)"
+            )
         pattern = family_pattern(concept_raw, period)
         geography = row.get("geography") or None
         entity = row.get("entity") or None
@@ -518,7 +544,7 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
                 "source_concepts": set(),
                 "rid_patterns": set(),
                 "suspects": set(),
-                "overlap_strips": set(),
+                "stripped": set(),
                 "units": Counter(),
                 "period_types": Counter(),
                 "geography": geography,
@@ -538,10 +564,10 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
         ident["suspects"].update(suspect_segments(pattern))
         ident["suspects"].update(suspect_segments(rid_pattern))
         for identifier in (concept_raw, rid):
-            ident["overlap_strips"].update(
+            ident["stripped"].update(
                 segment
                 for segment, kind in classify_segments(identifier, period)
-                if kind == "overlap"
+                if kind in ("derived", "overlap")
             )
         ident["units"][measure.get("unit")] += 1
         ident["period_types"][period.get("type")] += 1
@@ -637,6 +663,14 @@ class ExistingCatalog:
                     incoming.get("id"),
                 ):
                     continue
+                # A placeholder that DECLARES a boundary vintage only
+                # enriches observations of that vintage; an undeclared
+                # vintage (the docket mapping never sets one) is open.
+                cand_vintage = cand_geo.get("vintage")
+                if cand_vintage is not None and cand_vintage != (
+                    incoming.get("vintage")
+                ):
+                    continue
             placeholder_hits[candidate["uuid"]] = candidate
         if len(placeholder_hits) > 1:
             raise SystemExit(
@@ -649,30 +683,51 @@ class ExistingCatalog:
         return None
 
 
+def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
+    """JSON object hook that refuses duplicate member names.
+
+    Ordinary ``json.loads`` keeps the last value, so a line with two
+    ``uuid`` members means different things to different parsers.
+    """
+    obj: dict = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ValueError(f"duplicate JSON member {key!r}")
+        obj[key] = value
+    return obj
+
+
+def _usable_note(note: object) -> bool:
+    """A note must carry visible content, not just zero-width padding."""
+    return isinstance(note, str) and any(c.isalnum() for c in note)
+
+
 class UuidRegistry:
     """The append-only UUID minting ledger.
 
     One JSON object per line, binding one identity (concept, geography
-    level/id/vintage, entity name/role) to a UUID. Four event kinds, chained
+    level/id/vintage, entity name/role) to a UUID. Five event kinds, chained
     per identity and never edited or removed (``--verify-registry-append-
     only`` and the git-HEAD prefix check enforce growth-only):
 
-    * mint — the identity's first line; no markers.
-    * supersede — ``supersedes`` names the previous UUID; ``note`` required.
-      The binding changes UUID (remint or curated merge).
+    * mint — the identity's first line; no markers. Its UUID must be new to
+      the registry: ordinary mints can never reuse another binding's UUID.
+    * succeeds-mint — a mint carrying ``succeeds`` (the predecessor's
+      identity fields). The one sanctioned form of UUID reuse: the named
+      predecessor must already be retired holding exactly that UUID (a
+      docket placeholder enriched into its observed identity).
+    * supersede — ``supersedes`` names the previous UUID; ``note`` required;
+      the new UUID must differ and be new to the registry.
     * retire — ``retired: true`` with the unchanged UUID; ``note`` required.
       The identity left the catalog; its binding stays reserved but dormant.
     * revive — ``revived: true`` with the unchanged UUID; written
       automatically when a retired identity is observed again.
 
-    A LIVE binding (latest event not a retire) must always be represented in
-    the catalog by its UUID — that is the liveness invariant ``--check``
-    enforces, and it is what makes a silent partial rebuild impossible: any
-    catalog state that loses a live binding's UUID needs an explicit retire
-    or supersede event to become checkable again. Multiple identities may
-    share a UUID (a curated merge moves an identity onto the survivor's
-    UUID; an enriched docket placeholder registers its observed identity
-    beside the seed one) — the catalog still enforces one ROW per UUID.
+    Invariants ``--check`` builds on: live bindings and catalog rows are in
+    BIJECTION (same identity, same UUID, both directions), and live
+    bindings' UUIDs are unique by parsed value. Any state that re-keys,
+    swaps, or shares UUIDs without the explicit events above fails
+    validation or agreement.
     """
 
     def __init__(self, path: pathlib.Path, raw: bytes) -> None:
@@ -680,15 +735,21 @@ class UuidRegistry:
         self.raw = raw
         self.entries: list[dict] = []
         self.latest: dict[tuple[str, str, str], dict] = {}
+        # First owner of each 128-bit value, for the no-reuse rule.
+        self.uuid_owner: dict[int, tuple[str, str, str]] = {}
         problems: list[str] = []
+        if b"\r" in raw:
+            problems.append("registry must be LF-only (CR byte found)")
+        if raw and not raw.endswith(b"\n"):
+            problems.append("registry must end with a newline")
         for lineno, line in enumerate(raw.decode("utf-8").splitlines(), start=1):
             if not line.strip():
                 problems.append(f"line {lineno}: blank line")
                 continue
             try:
-                entry = json.loads(line)
-            except json.JSONDecodeError as exc:
-                problems.append(f"line {lineno}: not JSON ({exc})")
+                entry = json.loads(line, object_pairs_hook=_reject_duplicate_keys)
+            except (json.JSONDecodeError, ValueError) as exc:
+                problems.append(f"line {lineno}: not strict JSON ({exc})")
                 continue
             if not isinstance(entry, dict) or not isinstance(
                 entry.get("concept"), str
@@ -700,28 +761,43 @@ class UuidRegistry:
                 problems.append(f"line {lineno}: {problem}")
                 continue
             key = self.entry_key(entry)
+            parsed = uuid_module.UUID(entry["uuid"]).int
             previous = self.latest.get(key)
             supersedes = entry.get("supersedes")
             retired = entry.get("retired")
             revived = entry.get("revived")
+            succeeds = entry.get("succeeds")
             markers = sum(
-                1 for marker in (supersedes, retired, revived)
+                1 for marker in (supersedes, retired, revived, succeeds)
                 if marker is not None
             )
-            noted = isinstance(entry.get("note"), str) and entry["note"].strip()
             if markers > 1:
                 problems.append(
-                    f"line {lineno}: {key} mixes supersede/retire/revive "
-                    "markers"
+                    f"line {lineno}: {key} mixes "
+                    "supersede/retire/revive/succeeds markers"
                 )
-            elif previous is None:
-                if markers:
-                    problems.append(
-                        f"line {lineno}: {key} has no prior binding to "
-                        "supersede/retire/revive"
+            elif previous is None and supersedes is None and retired is None \
+                    and revived is None:
+                owner = self.uuid_owner.get(parsed)
+                if succeeds is not None:
+                    succeeds_problem = self._succeeds_problem(
+                        lineno, key, entry, succeeds
                     )
+                    if succeeds_problem:
+                        problems.append(succeeds_problem)
+                elif owner is not None:
+                    problems.append(
+                        f"line {lineno}: mint for {key} reuses uuid "
+                        f"{entry['uuid']} already bound to {owner} — UUID "
+                        "reuse needs an explicit succeeds event"
+                    )
+            elif previous is None:
+                problems.append(
+                    f"line {lineno}: {key} has no prior binding to "
+                    "supersede/retire/revive"
+                )
             elif supersedes is not None:
-                if entry.get("retired") or self._is_retired(previous):
+                if self._is_retired(previous):
                     problems.append(
                         f"line {lineno}: {key} supersedes a retired binding "
                         "(revive it first)"
@@ -731,9 +807,21 @@ class UuidRegistry:
                         f"line {lineno}: {key} supersedes {supersedes} but "
                         f"prior binding is {previous['uuid']}"
                     )
-                if not noted:
+                if entry["uuid"] == supersedes:
                     problems.append(
-                        f"line {lineno}: supersede for {key} requires a note"
+                        f"line {lineno}: supersede for {key} is a no-op "
+                        "(uuid equals supersedes)"
+                    )
+                elif self.uuid_owner.get(parsed) not in (None, key):
+                    problems.append(
+                        f"line {lineno}: supersede for {key} reuses uuid "
+                        f"{entry['uuid']} already bound to "
+                        f"{self.uuid_owner[parsed]}"
+                    )
+                if not _usable_note(entry.get("note")):
+                    problems.append(
+                        f"line {lineno}: supersede for {key} requires a "
+                        "substantive note"
                     )
             elif retired is not None:
                 if retired is not True:
@@ -747,9 +835,10 @@ class UuidRegistry:
                         f"line {lineno}: retire for {key} must keep uuid "
                         f"{previous['uuid']}"
                     )
-                if not noted:
+                if not _usable_note(entry.get("note")):
                     problems.append(
-                        f"line {lineno}: retire for {key} requires a note"
+                        f"line {lineno}: retire for {key} requires a "
+                        "substantive note"
                     )
             elif revived is not None:
                 if revived is not True:
@@ -770,11 +859,48 @@ class UuidRegistry:
                 )
             self.entries.append(entry)
             self.latest[key] = entry
+            self.uuid_owner.setdefault(parsed, key)
+        live_by_uuid: dict[int, tuple[str, str, str]] = {}
+        for key, entry in self.latest.items():
+            if self._is_retired(entry):
+                continue
+            parsed = uuid_module.UUID(entry["uuid"]).int
+            other = live_by_uuid.get(parsed)
+            if other is not None:
+                problems.append(
+                    f"live bindings {other} and {key} share uuid "
+                    f"{entry['uuid']} — retire or supersede one explicitly"
+                )
+            live_by_uuid[parsed] = key
         if problems:
             raise SystemExit(
                 "uuid registry invalid:\n"
                 + "\n".join(f"  {p}" for p in problems)
             )
+
+    def _succeeds_problem(
+        self, lineno: int, key: tuple, entry: dict, succeeds: object
+    ) -> str | None:
+        if not isinstance(succeeds, dict):
+            return f"line {lineno}: succeeds must be an identity object"
+        predecessor_key = self.entry_key(succeeds)
+        predecessor = self.latest.get(predecessor_key)
+        if predecessor is None:
+            return (
+                f"line {lineno}: {key} succeeds unknown identity "
+                f"{predecessor_key}"
+            )
+        if not self._is_retired(predecessor):
+            return (
+                f"line {lineno}: {key} succeeds a LIVE binding "
+                f"{predecessor_key} — retire it first"
+            )
+        if predecessor["uuid"] != entry["uuid"]:
+            return (
+                f"line {lineno}: {key} succeeds {predecessor_key} but "
+                f"carries uuid {entry['uuid']} != {predecessor['uuid']}"
+            )
+        return None
 
     @staticmethod
     def _is_retired(entry: dict) -> bool:
@@ -829,17 +955,22 @@ class UuidRegistry:
             ordered["note"] = entry["note"]
         elif entry.get("revived") is not None:
             ordered["revived"] = True
+        elif entry.get("succeeds") is not None:
+            ordered["succeeds"] = entry["succeeds"]
         return json.dumps(ordered, ensure_ascii=False)
 
-    def stage(self, new_entries: list[dict]) -> None:
-        """Add entries to the in-memory registry (no file write yet)."""
-        for entry in new_entries:
-            self.entries.append(entry)
-            self.latest[self.entry_key(entry)] = entry
+    def stage(self, new_entries: list[dict]) -> "UuidRegistry":
+        """Return a new registry with entries appended and REVALIDATED.
+
+        Revalidation reruns the entire event grammar over the staged bytes,
+        so no writer path can ever put an invalid chain on disk while
+        reporting success.
+        """
         addition = "".join(
             self.render_entry(entry) + "\n" for entry in new_entries
         )
-        self.raw = self.raw + addition.encode("utf-8")
+        staged_raw = self.raw + addition.encode("utf-8")
+        return UuidRegistry(self.path, staged_raw)
 
     def write(self) -> None:
         self.path.write_bytes(self.raw)
@@ -887,7 +1018,6 @@ def build_catalog(
     # canonical concept (curation owns naming; observed spellings become
     # aliases). Buckets landing on the same canonical identity merge.
     canonical: dict[tuple[str, str, str], dict] = {}
-    rekeys: dict[tuple[str, str, str], tuple[str, str, str]] = {}
     for key in sorted(identities):
         ident = identities[key]
         concept, geo_key, entity_key = key
@@ -895,8 +1025,6 @@ def build_catalog(
         prior = existing.match(key, names, ident["geography"], ident["entity"])
         canon_concept = prior["concept"] if prior else concept
         canon_key = (canon_concept, geo_key, entity_key)
-        if canon_key != key:
-            rekeys[key] = canon_key
         bucket = canonical.setdefault(
             canon_key,
             {
@@ -906,7 +1034,7 @@ def build_catalog(
                 "source_concepts": set(),
                 "rid_patterns": set(),
                 "suspects": set(),
-                "overlap_strips": set(),
+                "stripped": set(),
                 "units": Counter(),
                 "period_types": Counter(),
                 "geography": ident["geography"],
@@ -929,7 +1057,7 @@ def build_catalog(
         bucket["source_concepts"] |= ident["source_concepts"]
         bucket["rid_patterns"] |= ident["rid_patterns"]
         bucket["suspects"] |= ident["suspects"]
-        bucket["overlap_strips"] |= ident["overlap_strips"]
+        bucket["stripped"] |= ident["stripped"]
         bucket["units"] += ident["units"]
         bucket["period_types"] += ident["period_types"]
         bucket["sources"] |= ident["sources"]
@@ -939,6 +1067,7 @@ def build_catalog(
     series: list[dict] = []
     used_uuids: dict[int, tuple] = {}
     plan: dict[str, list] = {
+        "enrich_retires": [],
         "mints": [],
         "revives": [],
         "supersedes": [],
@@ -971,6 +1100,17 @@ def build_catalog(
         if prior_uuid and binding and prior_uuid != binding:
             # The catalog row disagrees with the registry: an explicit,
             # gated remint (the curator edited the row's uuid on purpose).
+            # A retired binding is revived first so the event chain stays
+            # valid (revives are staged before supersedes).
+            if not registry.is_live(canon_key):
+                plan["revives"].append(
+                    dict(
+                        _registry_event(
+                            canon_key[0], geography, entity, binding
+                        ),
+                        revived=True,
+                    )
+                )
             plan["supersedes"].append(
                 _registry_event(
                     canon_key[0], geography, entity, prior_uuid, binding
@@ -992,13 +1132,63 @@ def build_catalog(
                 )
             return binding
         row_uuid = prior_uuid if prior_uuid else str(uuid_module.uuid4())
+        owner_key = registry.uuid_owner.get(uuid_module.UUID(row_uuid).int)
+        if owner_key is not None:
+            prior_own_key = (
+                UuidRegistry.entry_key(prior) if prior is not None else None
+            )
+            if (
+                prior is not None
+                and prior.get("status") == "docket-only"
+                and owner_key == prior_own_key
+                and registry.is_live(owner_key)
+            ):
+                # Docket-placeholder enrichment: the binding MOVES to the
+                # observed identity via an explicit retire + succeeds pair.
+                # UUID continuity is preserved, so no ceremony flag needed.
+                plan["enrich_retires"].append(
+                    dict(
+                        _registry_event(
+                            prior["concept"],
+                            prior.get("geography"),
+                            prior.get("entity"),
+                            row_uuid,
+                        ),
+                        retired=True,
+                        note=(
+                            "docket placeholder enriched by first observed "
+                            "identity"
+                        ),
+                    )
+                )
+                plan["mints"].append(
+                    dict(
+                        _registry_event(
+                            canon_key[0], geography, entity, row_uuid
+                        ),
+                        succeeds={
+                            "concept": prior["concept"],
+                            "geography": _identity_geography(
+                                prior.get("geography")
+                            ),
+                            "entity": _identity_entity(prior.get("entity")),
+                        },
+                    )
+                )
+                return row_uuid
+            raise SystemExit(
+                f"identity {canon_key} would mint uuid {row_uuid}, which "
+                f"the registry already binds to {owner_key} — UUID reuse "
+                "requires an explicit ceremony (merge via curated alias + "
+                "--allow-remint, or placeholder enrichment)"
+            )
         plan["mints"].append(
             _registry_event(canon_key[0], geography, entity, row_uuid)
         )
         return row_uuid
 
     all_suspects: set[str] = set()
-    all_overlap_strips: set[str] = set()
+    all_stripped: set[str] = set()
     for canon_key in sorted(canonical):
         bucket = canonical[canon_key]
         concept, _, _ = canon_key
@@ -1010,7 +1200,7 @@ def build_catalog(
         curated_aliases = set(prior.get("aliases", [])) if prior else set()
         aliases = sorted((bucket["concepts"] | curated_aliases) - {concept})
         all_suspects.update(bucket["suspects"])
-        all_overlap_strips.update(bucket["overlap_strips"])
+        all_stripped.update(bucket["stripped"])
         series.append({
             "uuid": row_uuid,
             "concept": concept,
@@ -1034,22 +1224,27 @@ def build_catalog(
         docket_raw = docket_path.read_bytes()
         docket = json.loads(docket_raw.decode())
         alias_tally = Counter(alias for row in series for alias in row["aliases"])
-        claimed_names: set[str] = set()
+        name_rows: dict[str, list[dict]] = {}
         for row in series:
-            claimed_names.add(row["concept"])
+            name_rows.setdefault(row["concept"], []).append(row)
             for alias in row["aliases"]:
                 if alias_tally[alias] == 1:
-                    claimed_names.add(alias)
+                    name_rows.setdefault(alias, []).append(row)
+        seen_docket_names: set[str] = set()
         for entry in docket["series"]:
             concept = entry["series"]
+            if concept in seen_docket_names:
+                raise SystemExit(
+                    f"duplicate docket series id {concept!r} — docket names "
+                    "must be unique or claiming becomes order-dependent"
+                )
+            seen_docket_names.add(concept)
             cadence_word = entry.get("cadence")
             if cadence_word not in CADENCE_TO_PERIOD_TYPE:
                 raise SystemExit(
                     f"docket cadence {cadence_word!r} for {concept} has no "
                     "period-type mapping; extend CADENCE_TO_PERIOD_TYPE"
                 )
-            if concept in claimed_names:
-                continue
             extras = entry.get("extras") or {}
             country = extras.get("country")
             geography = None
@@ -1060,13 +1255,28 @@ def build_catalog(
                         f"docket entry {concept} has country {country!r} with "
                         "no geography mapping; extend COUNTRY_GEOGRAPHY"
                     )
+            # A name claim only counts within the entry's declared
+            # dimension: a GB observation must not swallow a US docket
+            # entry of the same name.
+            claimants = name_rows.get(concept, [])
+            if geography is not None:
+                claimants = [
+                    row
+                    for row in claimants
+                    if (
+                        (row.get("geography") or {}).get("level"),
+                        (row.get("geography") or {}).get("id"),
+                    ) == (geography["level"], geography["id"])
+                ]
+            if claimants:
+                continue
             key = (concept, _geo_key(geography), _entity_key(None))
             prior = existing.match(key, {concept}, geography, None)
             row_uuid = claim_uuid(
                 resolve_uuid(key, prior, geography, None), key
             )
             curated_aliases = set(prior.get("aliases", [])) if prior else set()
-            series.append({
+            docket_row = {
                 "uuid": row_uuid,
                 "concept": concept,
                 "family_patterns": [family_pattern(concept)],
@@ -1082,8 +1292,9 @@ def build_catalog(
                 "first_observed_period": None,
                 "last_observed_period": None,
                 "observation_count": 0,
-            })
-            claimed_names.add(concept)
+            }
+            series.append(docket_row)
+            name_rows.setdefault(concept, []).append(docket_row)
 
     series.sort(key=lambda row: (
         row["concept"],
@@ -1091,42 +1302,28 @@ def build_catalog(
         _entity_key(row.get("entity")),
     ))
 
-    # Absorbed identities: an observed bucket that canonicalized onto a
-    # different identity moves that identity's registry binding onto the
-    # surviving UUID (a supersede event) if it pointed elsewhere.
+    # Liveness is IDENTITY-AWARE: every live registry binding must have a
+    # catalog row at exactly its identity carrying exactly its UUID. A
+    # binding losing that (row deleted, identity re-keyed, observations
+    # absorbed by a curated merge) needs an explicit retire — the gap that
+    # let re-keyed identities swap or shed UUIDs while their old values
+    # lingered elsewhere in the catalog is closed by matching on the pair,
+    # never on bare UUID membership.
     row_uuid_by_key = {
         (r["concept"], _geo_key(r.get("geography")), _entity_key(r.get("entity"))):
             r["uuid"]
         for r in series
     }
-    for original_key, canon_key in sorted(rekeys.items()):
-        old_binding = registry.binding(original_key)
-        surviving = row_uuid_by_key.get(canon_key)
-        if old_binding and surviving and old_binding != surviving:
-            ident = identities[original_key]
-            plan["supersedes"].append(
-                _registry_event(
-                    original_key[0],
-                    ident["geography"],
-                    ident["entity"],
-                    surviving,
-                    old_binding,
-                )
-            )
-
-    # Liveness: every live registry binding must keep its UUID somewhere in
-    # the catalog. A binding that loses it needs an explicit retire (or is
-    # covered by a planned supersede). This is what makes a partial rebuild
-    # against a truncated catalog loud instead of silently re-minting.
     new_uuids = {r["uuid"] for r in series}
-    superseding_keys = {
-        UuidRegistry.entry_key(event) for event in plan["supersedes"]
+    planned_keys = {
+        UuidRegistry.entry_key(event)
+        for event in plan["supersedes"] + plan["enrich_retires"]
     }
     retire_keys: set[tuple[str, str, str]] = set()
     for key, entry in registry.live_bindings():
-        if entry["uuid"] in new_uuids:
+        if row_uuid_by_key.get(key) == entry["uuid"]:
             continue
-        if key in superseding_keys:
+        if key in planned_keys:
             continue
         plan["retire_pending"].append(
             dict(
@@ -1152,7 +1349,9 @@ def build_catalog(
             continue
         plan["dropped"].append((prior_key, prior_row["uuid"]))
 
-    for kind in ("mints", "revives", "supersedes", "retire_pending"):
+    for kind in (
+        "enrich_retires", "mints", "revives", "supersedes", "retire_pending",
+    ):
         plan[kind].sort(
             key=lambda e: (e["concept"], _geo_key(e["geography"]),
                            _entity_key(e["entity"]))
@@ -1167,8 +1366,9 @@ def build_catalog(
             "level/id/vintage, entity) identity. UUID authority is the "
             "append-only ledger/series_uuid_registry.jsonl (digest below): "
             "a uuid is minted once, inherited from the registry on every "
-            "regeneration, and changes only through an explicit "
-            "--allow-remint supersede event recorded there. Consumers "
+            "regeneration, and changes only through explicit, chained "
+            "supersede/retire/revive/succeeds events recorded there "
+            "(live bindings and rows stay in bijection). Consumers "
             "reference series by uuid or concept only. Regenerate with "
             "scripts/build_series_catalog.py; verify with --check. Aliases "
             "are curated identity statements (plus observed spellings of "
@@ -1188,7 +1388,7 @@ def build_catalog(
         ),
         "uuid_registry_sha256": None,
         "suspect_segments": sorted(all_suspects),
-        "overlap_stripped_segments": sorted(all_overlap_strips),
+        "stripped_segments": sorted(all_stripped),
         "ambiguous_aliases": ambiguous_aliases,
         "series": series,
     }
@@ -1232,20 +1432,21 @@ def registry_agreement_problems(
 ) -> list[str]:
     """Catalog/registry disagreements, in both directions.
 
-    Forward: every catalog row's identity must be bound to exactly its UUID.
-    Reverse (liveness): every live binding's UUID must appear on some
-    catalog row — a live binding whose UUID is absent means identities were
-    deleted without a retire/supersede event.
+    Catalog rows and live registry bindings must be in BIJECTION: each
+    row's identity is bound to exactly its UUID, and each live binding has
+    a catalog row at exactly its identity with exactly its UUID. Matching
+    on the (identity, uuid) pair — never on bare UUID membership — is what
+    makes re-keyed or swapped identities loud.
     """
     problems = []
-    row_uuids: set[str] = set()
+    row_uuid_by_key: dict[tuple[str, str, str], str] = {}
     for row in catalog.get("series", []):
-        row_uuids.add(row.get("uuid"))
         key = (
             row["concept"],
             _geo_key(row.get("geography")),
             _entity_key(row.get("entity")),
         )
+        row_uuid_by_key[key] = row.get("uuid")
         binding = registry.binding(key)
         if binding is None:
             problems.append(f"{key}: no registry binding for uuid {row['uuid']}")
@@ -1254,11 +1455,16 @@ def registry_agreement_problems(
                 f"{key}: catalog uuid {row['uuid']} != registry binding "
                 f"{binding}"
             )
-    for key, entry in registry.live_bindings():
-        if entry["uuid"] not in row_uuids:
+        elif not registry.is_live(key):
             problems.append(
-                f"{key}: live binding {entry['uuid']} has no catalog row — "
-                "retire or supersede it explicitly"
+                f"{key}: catalog row uses a RETIRED binding "
+                f"{row['uuid']} (regenerate to record the revive)"
+            )
+    for key, entry in registry.live_bindings():
+        if row_uuid_by_key.get(key) != entry["uuid"]:
+            problems.append(
+                f"{key}: live binding {entry['uuid']} has no catalog row at "
+                "its identity — retire or supersede it explicitly"
             )
     return problems
 
@@ -1416,6 +1622,12 @@ def main(argv: list[str] | None = None) -> int:
                 f"{len(plan['revives'])} retired identities observed again "
                 "(regenerate to record the revive events)"
             )
+        if plan["enrich_retires"]:
+            failures.append(
+                f"{len(plan['enrich_retires'])} docket placeholders enriched "
+                "by observations (regenerate to record the retire/succeeds "
+                "events)"
+            )
         failures.extend(identity_changes)
         catalog["uuid_registry_sha256"] = registry.sha256()
         body = render(catalog)
@@ -1466,8 +1678,9 @@ def main(argv: list[str] | None = None) -> int:
             sys.stderr.write(f"uuid validation: {problem}\n")
         return 1
 
-    registry.stage(
-        plan["mints"]
+    registry = registry.stage(
+        plan["enrich_retires"]
+        + plan["mints"]
         + plan["revives"]
         + plan["supersedes"]
         + plan["retire_pending"]
