@@ -1,18 +1,12 @@
 {
-  "comment": "Canonical series catalog. One row per (concept, geography, entity) identity; uuid is minted once and never re-minted (regeneration preserves it by identity, then by concept/alias). Consumers reference series by uuid or concept only. Regenerate with scripts/build_series_catalog.py; verify with --check. Cross-spelling and cross-vintage merges are manual curation: keep the surviving row's uuid, move absorbed spellings to aliases — curated aliases persist across regeneration. Aliases listed in ambiguous_aliases match multiple rows and never drive identity inheritance.",
-  "generator_version": 2,
+  "comment": "Canonical series catalog. One row per (concept, geography level/id/vintage, entity) identity. UUID authority is the append-only ledger/series_uuid_registry.jsonl (digest below): a uuid is minted once, inherited from the registry on every regeneration, and changes only through an explicit --allow-remint supersede event recorded there. Consumers reference series by uuid or concept only. Regenerate with scripts/build_series_catalog.py; verify with --check. Aliases are curated identity statements (plus observed spellings of the same identity) and inherit only within one (geography, entity) slice; aliases listed in ambiguous_aliases match multiple rows and never drive inheritance. source_concepts are publisher labels — provenance, never identity. Cross-spelling and cross-vintage merges are manual curation: delete the absorbed row, alias its concept on the survivor, regenerate with --allow-remint.",
+  "generator_version": 3,
   "observations_sha256": "63127ff427a4aa3884f54dd1ee070ab631c15ebb38f23fdc9095a45e9204109f",
   "observation_rows": 168,
   "docket_seed_sha256": "930424fb48c0be4c9e2ce17d4e0f2a6be886408e814c80324174a7a303fa0271",
+  "uuid_registry_sha256": "c4ccda3f1746ff06cf8cc17dc221ea3a82b7b16a5d719361e2025bc5d7b63356",
   "suspect_segments": [],
-  "ambiguous_aliases": [
-    "CPI/3.10001.10.50.M",
-    "JTSJOL",
-    "PCEPILFE",
-    "prc_hicp_minr/M.RCH_A.TOTAL.EA21",
-    "v41690973",
-    "v65201210"
-  ],
+  "ambiguous_aliases": [],
   "series": [
     {
       "uuid": "efbb2901-f8f8-4f5b-9835-56e5cc3e62ff",
@@ -37,7 +31,9 @@
         "abs"
       ],
       "aliases": [
-        "abs.building_approvals.total_dwellings_mom.australia.may_2026",
+        "abs.building_approvals.total_dwellings_mom.australia.may_2026"
+      ],
+      "source_concepts": [
         "building-approvals-australia release page"
       ],
       "rid_patterns": [
@@ -69,7 +65,8 @@
       "sources": [
         "abs"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "CPI/3.10001.10.50.M"
       ],
       "rid_patterns": [
@@ -102,8 +99,10 @@
         "abs"
       ],
       "aliases": [
-        "CPI/3.10001.10.50.M",
         "abs.cpi.all_groups_annual_rate.australia.may_2026"
+      ],
+      "source_concepts": [
+        "CPI/3.10001.10.50.M"
       ],
       "rid_patterns": [
         "abs.cpi.all_groups_annual_rate.australia.{P}.first_print"
@@ -135,8 +134,10 @@
         "abs"
       ],
       "aliases": [
-        "CPI/3.10001.10.50.M",
         "abs.cpi_indicator.allgroups.yoy.2026-05"
+      ],
+      "source_concepts": [
+        "CPI/3.10001.10.50.M"
       ],
       "rid_patterns": [
         "abs.cpi_indicator.allgroups.yoy.{P}"
@@ -168,9 +169,11 @@
         "abs"
       ],
       "aliases": [
-        "LF/M3.3.1599.20.AUS.M",
         "abs.labour.employment_change.australia.june_2026",
         "abs.labour.employment_change.australia.may_2026"
+      ],
+      "source_concepts": [
+        "LF/M3.3.1599.20.AUS.M"
       ],
       "rid_patterns": [
         "abs.labour.employment_change.australia.{P}.first_print"
@@ -192,6 +195,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -220,9 +224,11 @@
         "abs"
       ],
       "aliases": [
-        "LF/M13.3.1599.20.AUS.M",
         "abs.labour.unemployment_rate.australia.june_2026",
         "abs.labour.unemployment_rate.australia.may_2026"
+      ],
+      "source_concepts": [
+        "LF/M13.3.1599.20.AUS.M"
       ],
       "rid_patterns": [
         "abs.labour.unemployment_rate.australia.{P}.first_print"
@@ -256,6 +262,9 @@
       "aliases": [
         "bank_of_canada.overnight_rate.after_june_2026"
       ],
+      "source_concepts": [
+        "bank_of_canada.overnight_rate.after_june_2026"
+      ],
       "rid_patterns": [
         "bank_of_canada.overnight_rate.{P}"
       ],
@@ -276,6 +285,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -304,8 +314,10 @@
         "bea"
       ],
       "aliases": [
-        "DSPI",
         "bea.disposable_personal_income.level.may_2026"
+      ],
+      "source_concepts": [
+        "DSPI"
       ],
       "rid_patterns": [
         "bea.disposable_personal_income.level.{P}.first_print"
@@ -337,8 +349,10 @@
         "bea"
       ],
       "aliases": [
-        "A063RC1",
         "bea.government_social_benefits.level.may_2026"
+      ],
+      "source_concepts": [
+        "A063RC1"
       ],
       "rid_patterns": [
         "bea.government_social_benefits.level.{P}.first_print"
@@ -370,8 +384,10 @@
         "bea"
       ],
       "aliases": [
-        "W729RC1",
         "bea.government_social_benefits.medicaid.may_2026"
+      ],
+      "source_concepts": [
+        "W729RC1"
       ],
       "rid_patterns": [
         "bea.government_social_benefits.medicaid.{P}.first_print"
@@ -403,8 +419,10 @@
         "bea"
       ],
       "aliases": [
-        "W824RC1",
         "bea.government_social_benefits.medicare.may_2026"
+      ],
+      "source_concepts": [
+        "W824RC1"
       ],
       "rid_patterns": [
         "bea.government_social_benefits.medicare.{P}.first_print"
@@ -436,8 +454,10 @@
         "bea"
       ],
       "aliases": [
-        "W823RC1",
         "bea.government_social_benefits.social_security.may_2026"
+      ],
+      "source_concepts": [
+        "W823RC1"
       ],
       "rid_patterns": [
         "bea.government_social_benefits.social_security.{P}.first_print"
@@ -469,8 +489,10 @@
         "bea"
       ],
       "aliases": [
-        "PCEPILFE",
         "bea.pce.core_mom.may_2026"
+      ],
+      "source_concepts": [
+        "PCEPILFE"
       ],
       "rid_patterns": [
         "bea.pce.core_mom.{P}.first_print"
@@ -502,8 +524,10 @@
         "bea"
       ],
       "aliases": [
-        "PCEPI",
         "bea.pce_price_index.monthly_change.may_2026"
+      ],
+      "source_concepts": [
+        "PCEPI"
       ],
       "rid_patterns": [
         "bea.pce_price_index.monthly_change.{P}.first_print"
@@ -535,8 +559,10 @@
         "bea"
       ],
       "aliases": [
-        "W055RC1",
         "bea.personal_current_taxes.level.may_2026"
+      ],
+      "source_concepts": [
+        "W055RC1"
       ],
       "rid_patterns": [
         "bea.personal_current_taxes.level.{P}.first_print"
@@ -568,8 +594,10 @@
         "bea"
       ],
       "aliases": [
-        "A191RL1Q225SBEA",
         "bea.real_gdp.saar.q1_2026.third_estimate"
+      ],
+      "source_concepts": [
+        "A191RL1Q225SBEA"
       ],
       "rid_patterns": [
         "bea.real_gdp.saar.{P}.third_estimate"
@@ -591,6 +619,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -619,8 +648,10 @@
         "bea"
       ],
       "aliases": [
-        "A576RC1",
         "bea.wages_and_salaries.level.may_2026"
+      ],
+      "source_concepts": [
+        "A576RC1"
       ],
       "rid_patterns": [
         "bea.wages_and_salaries.level.{P}.first_print"
@@ -654,6 +685,9 @@
       "aliases": [
         "bls.ces.average_hourly_earnings_private"
       ],
+      "source_concepts": [
+        "bls.ces.average_hourly_earnings_private"
+      ],
       "rid_patterns": [
         "bls.ces.average_hourly_earnings_private.{P}.first_print"
       ],
@@ -674,6 +708,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -702,8 +737,10 @@
         "bls_ces"
       ],
       "aliases": [
-        "PAYEMS",
         "bls.ces.total_nonfarm_payroll_change.june_2026"
+      ],
+      "source_concepts": [
+        "PAYEMS"
       ],
       "rid_patterns": [
         "bls.ces.total_nonfarm_payroll_change.{P}.first_print"
@@ -735,6 +772,9 @@
         "bls"
       ],
       "aliases": [],
+      "source_concepts": [
+        "bls.ces.total_nonfarm_payroll_change"
+      ],
       "rid_patterns": [
         "bls.ces.total_nonfarm_payroll_change.{P}.first_print"
       ],
@@ -755,6 +795,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -773,6 +814,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -791,6 +833,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -809,6 +852,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -827,6 +871,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -855,8 +900,10 @@
         "bls_cpi"
       ],
       "aliases": [
-        "CPILFESL",
         "bls.cpi.u.core_mom.june_2026"
+      ],
+      "source_concepts": [
+        "CPILFESL"
       ],
       "rid_patterns": [
         "bls.cpi.u.core_mom.{P}.first_print"
@@ -890,6 +937,9 @@
       "aliases": [
         "bls.cpi.u.core_mom.may_2026"
       ],
+      "source_concepts": [
+        "bls.cpi.u.core_mom.may_2026"
+      ],
       "rid_patterns": [
         "bls.cpi.u.core_mom.{P}.first_print"
       ],
@@ -920,8 +970,10 @@
         "bls_cpi"
       ],
       "aliases": [
-        "CPIAUCSL",
         "bls.cpi.u.headline_mom.june_2026"
+      ],
+      "source_concepts": [
+        "CPIAUCSL"
       ],
       "rid_patterns": [
         "bls.cpi.u.headline_mom.{P}.first_print"
@@ -955,6 +1007,9 @@
       "aliases": [
         "bls.cpi.u.headline_mom.may_2026"
       ],
+      "source_concepts": [
+        "bls.cpi.u.headline_mom.may_2026"
+      ],
       "rid_patterns": [
         "bls.cpi.u.headline_mom.{P}.first_print"
       ],
@@ -985,8 +1040,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Business and financial operations occupations",
         "bls.cps.employed_people_by_occupation.business_financial_operations.june_2026"
+      ],
+      "source_concepts": [
+        "Business and financial operations occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.business_financial_operations.{P}.first_print"
@@ -1018,8 +1075,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Computer and mathematical occupations",
         "bls.cps.employed_people_by_occupation.computer_mathematical.june_2026"
+      ],
+      "source_concepts": [
+        "Computer and mathematical occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.computer_mathematical.{P}.first_print"
@@ -1051,8 +1110,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Healthcare support occupations",
         "bls.cps.employed_people_by_occupation.healthcare_support.june_2026"
+      ],
+      "source_concepts": [
+        "Healthcare support occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.healthcare_support.{P}.first_print"
@@ -1084,8 +1145,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Office and administrative support occupations",
         "bls.cps.employed_people_by_occupation.office_administrative_support.june_2026"
+      ],
+      "source_concepts": [
+        "Office and administrative support occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.office_administrative_support.{P}.first_print"
@@ -1117,8 +1180,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Production occupations",
         "bls.cps.employed_people_by_occupation.production.june_2026"
+      ],
+      "source_concepts": [
+        "Production occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.production.{P}.first_print"
@@ -1150,8 +1215,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "Transportation and material moving occupations",
         "bls.cps.employed_people_by_occupation.transportation_material_moving.june_2026"
+      ],
+      "source_concepts": [
+        "Transportation and material moving occupations"
       ],
       "rid_patterns": [
         "bls.cps.employed_people_by_occupation.transportation_material_moving.{P}.first_print"
@@ -1173,6 +1240,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1191,6 +1259,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1219,8 +1288,10 @@
         "bls_cps"
       ],
       "aliases": [
-        "UNRATE",
         "bls.cps.unemployment_rate.june_2026"
+      ],
+      "source_concepts": [
+        "UNRATE"
       ],
       "rid_patterns": [
         "bls.cps.unemployment_rate.{P}.first_print"
@@ -1252,6 +1323,9 @@
         "bls"
       ],
       "aliases": [],
+      "source_concepts": [
+        "bls.cps.unemployment_rate"
+      ],
       "rid_patterns": [
         "bls.cps.unemployment_rate.{P}.first_print"
       ],
@@ -1282,8 +1356,10 @@
         "bls_eci"
       ],
       "aliases": [
-        "ECIWAG",
         "bls.eci.private_wages_salaries_qoq.2026_q2"
+      ],
+      "source_concepts": [
+        "ECIWAG"
       ],
       "rid_patterns": [
         "bls.eci.private_wages_salaries_qoq.{P}.first_print"
@@ -1315,8 +1391,10 @@
         "bls_eci"
       ],
       "aliases": [
-        "ECICOM",
         "bls.eci.total_compensation_private_industry_qoq.2026_q2"
+      ],
+      "source_concepts": [
+        "ECICOM"
       ],
       "rid_patterns": [
         "bls.eci.total_compensation_private_industry_qoq.{P}.first_print"
@@ -1338,6 +1416,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1366,8 +1445,10 @@
         "bls_import_export_prices"
       ],
       "aliases": [
-        "IR",
         "bls.import_price_index.all_imports_mom.2026-06"
+      ],
+      "source_concepts": [
+        "IR"
       ],
       "rid_patterns": [
         "bls.import_price_index.all_imports_mom.{P}.first_print"
@@ -1399,8 +1480,10 @@
         "bls"
       ],
       "aliases": [
-        "bls.import_price_index.all_imports",
         "bls.import_price_index.all_imports_mom.may_2026"
+      ],
+      "source_concepts": [
+        "bls.import_price_index.all_imports"
       ],
       "rid_patterns": [
         "bls.import_price_index.all_imports_mom.{P}.first_print"
@@ -1422,6 +1505,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1450,8 +1534,10 @@
         "bls_jolts"
       ],
       "aliases": [
-        "JTSJOL",
         "bls.jolts.job_openings.may_2026"
+      ],
+      "source_concepts": [
+        "JTSJOL"
       ],
       "rid_patterns": [
         "bls.jolts.job_openings.{P}.first_print"
@@ -1483,8 +1569,10 @@
         "bls_jolts"
       ],
       "aliases": [
-        "JTSJOL",
         "bls.jolts.job_openings_total.may_2026"
+      ],
+      "source_concepts": [
+        "JTSJOL"
       ],
       "rid_patterns": [
         "bls.jolts.job_openings_total.{P}.first_print"
@@ -1506,6 +1594,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1524,6 +1613,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1554,6 +1644,9 @@
       "aliases": [
         "bls.ppi.final_demand_monthly_change.may_2026"
       ],
+      "source_concepts": [
+        "bls.ppi.final_demand_monthly_change.may_2026"
+      ],
       "rid_patterns": [
         "bls.ppi.final_demand_monthly_change.{P}.first_print"
       ],
@@ -1574,6 +1667,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1592,6 +1686,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1610,6 +1705,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1640,6 +1736,9 @@
       "aliases": [
         "boe.bank_rate.2026_06_18",
         "boe.bank_rate.after_mpc_june_2026"
+      ],
+      "source_concepts": [
+        "boe.bank_rate"
       ],
       "rid_patterns": [
         "boe.bank_rate.{P}",
@@ -1672,8 +1771,10 @@
         "boj"
       ],
       "aliases": [
-        "boj.guideline_uncollateralized_overnight_call_rate",
         "boj.policy_rate_guideline.after_june_2026"
+      ],
+      "source_concepts": [
+        "boj.guideline_uncollateralized_overnight_call_rate"
       ],
       "rid_patterns": [
         "boj.policy_rate_guideline.{P}"
@@ -1695,6 +1796,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1713,6 +1815,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1731,6 +1834,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1760,6 +1864,9 @@
       ],
       "aliases": [
         "census.housing_starts.saar.may_2026"
+      ],
+      "source_concepts": [
+        "census.housing_starts.saar"
       ],
       "rid_patterns": [
         "census.housing_starts.saar.{P}.first_print"
@@ -1791,8 +1898,10 @@
         "census_housing"
       ],
       "aliases": [
-        "HOUST",
         "census.housing_starts.saar.2026-06"
+      ],
+      "source_concepts": [
+        "HOUST"
       ],
       "rid_patterns": [
         "census.housing_starts.saar.{P}.first_print"
@@ -1824,8 +1933,10 @@
         "census_m3"
       ],
       "aliases": [
-        "DGORDER",
         "census.m3.durable_goods_new_orders_mom.2026_06"
+      ],
+      "source_concepts": [
+        "DGORDER"
       ],
       "rid_patterns": [
         "census.m3.durable_goods_new_orders_mom.{P}.first_print"
@@ -1857,8 +1968,10 @@
         "census_m3"
       ],
       "aliases": [
-        "AMDMVS",
         "census.m3.durable_goods_shipments_mom.2026_06"
+      ],
+      "source_concepts": [
+        "AMDMVS"
       ],
       "rid_patterns": [
         "census.m3.durable_goods_shipments_mom.{P}.first_print"
@@ -1890,7 +2003,9 @@
         "census"
       ],
       "aliases": [
-        "census.marts.adv44x72.may_2026.monthly_change",
+        "census.marts.adv44x72.may_2026.monthly_change"
+      ],
+      "source_concepts": [
         "census.marts.advance_retail_and_food_services_sales_mom"
       ],
       "rid_patterns": [
@@ -1923,8 +2038,10 @@
         "census"
       ],
       "aliases": [
-        "census.mtis.total_business_inventories",
         "census.mtis.total_business_inventories_level.april_2026"
+      ],
+      "source_concepts": [
+        "census.mtis.total_business_inventories"
       ],
       "rid_patterns": [
         "census.mtis.total_business_inventories_level.{P}.first_print"
@@ -1946,6 +2063,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -1974,8 +2092,10 @@
         "cms_provider_data"
       ],
       "aliases": [
-        "Average Number of Residents per Day / Number of Certified Beds",
         "cms.care_compare.nursing_home_occupancy_pct.2026-07"
+      ],
+      "source_concepts": [
+        "Average Number of Residents per Day / Number of Certified Beds"
       ],
       "rid_patterns": [
         "cms.care_compare.nursing_home_occupancy_pct.{P}.first_print"
@@ -2006,7 +2126,8 @@
       "sources": [
         "cms"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "Beneficiaries Disenrolled for Procedural Reasons at Renewal"
       ],
       "rid_patterns": [
@@ -2038,7 +2159,8 @@
       "sources": [
         "cms"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "Beneficiaries Disenrolled at Renewal (Total)"
       ],
       "rid_patterns": [
@@ -2070,7 +2192,8 @@
       "sources": [
         "cms"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "Beneficiaries Whose Coverage Was Renewed on an Ex Parte Basis"
       ],
       "rid_patterns": [
@@ -2102,7 +2225,8 @@
       "sources": [
         "cms"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "Beneficiaries Whose Coverage Was Renewed (Total)"
       ],
       "rid_patterns": [
@@ -2135,8 +2259,10 @@
         "cms_provider_data"
       ],
       "aliases": [
-        "Reported Total Nurse Staffing Hours per Resident per Day",
         "cms.nursing_home_compare.reported_total_nurse_staffing_hprd_us.2026-07"
+      ],
+      "source_concepts": [
+        "Reported Total Nurse Staffing Hours per Resident per Day"
       ],
       "rid_patterns": [
         "cms.nursing_home_compare.reported_total_nurse_staffing_hprd_us.{P}.first_print"
@@ -2167,7 +2293,8 @@
       "sources": [
         "dol_eta"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "CCSA"
       ],
       "rid_patterns": [
@@ -2202,6 +2329,9 @@
       "aliases": [
         "dol.eta.initial_claims.sa.week_ending_2026_06_06"
       ],
+      "source_concepts": [
+        "dol.eta.initial_claims.sa.week_ending_2026_06_06"
+      ],
       "rid_patterns": [
         "dol.eta.initial_claims.sa.{P}"
       ],
@@ -2234,6 +2364,9 @@
       "aliases": [
         "ecb.deposit_facility_rate.after_june_2026"
       ],
+      "source_concepts": [
+        "ecb.deposit_facility_rate.after_june_2026"
+      ],
       "rid_patterns": [
         "ecb.deposit_facility_rate.{P}"
       ],
@@ -2264,7 +2397,9 @@
         "statjp"
       ],
       "aliases": [
-        "estat.jp.cpi.core_exfreshfood.yoy.2026_05",
+        "estat.jp.cpi.core_exfreshfood.yoy.2026_05"
+      ],
+      "source_concepts": [
         "japan.cpi.all_items_less_fresh_food_yoy"
       ],
       "rid_patterns": [
@@ -2298,7 +2433,9 @@
         "eurostat"
       ],
       "aliases": [
-        "eurostat.ea.hicp.flash.yoy.2026-06",
+        "eurostat.ea.hicp.flash.yoy.2026-06"
+      ],
+      "source_concepts": [
         "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
       ],
       "rid_patterns": [
@@ -2307,6 +2444,41 @@
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-07",
       "observation_count": 2
+    },
+    {
+      "uuid": "74ce2da4-28ed-409a-a0f1-2a7c40dc7caf",
+      "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
+      "family_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "month",
+      "geography": {
+        "level": "region",
+        "id": "EA21",
+        "vintage": "current",
+        "name": "Euro area"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "eurostat"
+      ],
+      "aliases": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.june_2026"
+      ],
+      "source_concepts": [
+        "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
+      ],
+      "rid_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.flash"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
     },
     {
       "uuid": "815299ce-841a-4115-9af2-3b52fc036834",
@@ -2333,44 +2505,14 @@
       "aliases": [
         "eurostat.hicp.all_items_annual_rate.euro_area.may_2026"
       ],
+      "source_concepts": [
+        "eurostat.hicp.all_items_annual_rate.euro_area"
+      ],
       "rid_patterns": [
         "eurostat.hicp.all_items_annual_rate.euro_area.{P}.final_first_print"
       ],
       "first_observed_period": "2026-05",
       "last_observed_period": "2026-05",
-      "observation_count": 1
-    },
-    {
-      "uuid": "74ce2da4-28ed-409a-a0f1-2a7c40dc7caf",
-      "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
-      "family_patterns": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
-      ],
-      "status": "observed",
-      "unit": "percent",
-      "cadence": "month",
-      "geography": {
-        "level": "region",
-        "id": "EA21",
-        "vintage": "current",
-        "name": "Euro area"
-      },
-      "entity": {
-        "name": "economy",
-        "role": "aggregate"
-      },
-      "sources": [
-        "eurostat"
-      ],
-      "aliases": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.june_2026",
-        "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
-      ],
-      "rid_patterns": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.flash"
-      ],
-      "first_observed_period": "2026-06",
-      "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
@@ -2386,6 +2528,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2415,6 +2558,9 @@
       ],
       "aliases": [
         "eurostat.industrial_production.euro_area.april_2026"
+      ],
+      "source_concepts": [
+        "eurostat.industrial_production.euro_area"
       ],
       "rid_patterns": [
         "eurostat.industrial_production.euro_area.{P}.first_print"
@@ -2446,7 +2592,9 @@
         "eurostat"
       ],
       "aliases": [
-        "eurostat.retail_trade.volume_mom.euro_area.may_2026",
+        "eurostat.retail_trade.volume_mom.euro_area.may_2026"
+      ],
+      "source_concepts": [
         "products-euro-indicators release page (euro area headline)"
       ],
       "rid_patterns": [
@@ -2469,6 +2617,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2491,6 +2640,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2519,7 +2669,9 @@
         "eurostat"
       ],
       "aliases": [
-        "eurostat.unemployment_rate.euro_area.may_2026",
+        "eurostat.unemployment_rate.euro_area.may_2026"
+      ],
+      "source_concepts": [
         "une_rt_m/M.SA.TOTAL.PC_ACT.T.EA21"
       ],
       "rid_patterns": [
@@ -2542,6 +2694,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2570,8 +2723,10 @@
         "federal_reserve_g17"
       ],
       "aliases": [
-        "TCU",
         "fed.g17.capacity_utilization.total_industry.2026-06"
+      ],
+      "source_concepts": [
+        "TCU"
       ],
       "rid_patterns": [
         "fed.g17.capacity_utilization.total_industry.{P}.first_print"
@@ -2605,6 +2760,9 @@
       "aliases": [
         "fed.g17.capacity_utilization.total_industry.may_2026"
       ],
+      "source_concepts": [
+        "fed.g17.capacity_utilization.total_industry"
+      ],
       "rid_patterns": [
         "fed.g17.capacity_utilization.total_industry.{P}.first_print"
       ],
@@ -2635,8 +2793,10 @@
         "federal_reserve_g17"
       ],
       "aliases": [
-        "INDPRO",
         "fed.g17.industrial_production.total_index_mom.2026-06"
+      ],
+      "source_concepts": [
+        "INDPRO"
       ],
       "rid_patterns": [
         "fed.g17.industrial_production.total_index_mom.{P}.first_print"
@@ -2670,6 +2830,9 @@
       "aliases": [
         "fed.g17.industrial_production.total_index_mom.may_2026"
       ],
+      "source_concepts": [
+        "fed.g17.industrial_production.total_index_mom"
+      ],
       "rid_patterns": [
         "fed.g17.industrial_production.total_index_mom.{P}.first_print"
       ],
@@ -2690,6 +2853,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2708,6 +2872,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2726,6 +2891,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2744,6 +2910,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -2772,6 +2939,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.application_processing_timeliness_rate"
+      ],
       "rid_patterns": [
         "fns.snap.application_processing_timeliness.california.{P}.official_release"
       ],
@@ -2802,6 +2972,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.overpayment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.overpayment_payment_error_rate.us.{P}.official_release"
       ],
@@ -2831,7 +3004,8 @@
       "sources": [
         "fns"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "fns.snap.total_payment_error_rate"
       ],
       "rid_patterns": [
@@ -2864,6 +3038,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.us.{P}",
         "fns.snap.total_payment_error_rate.us.{P}.official_release"
@@ -2895,6 +3072,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.al.{P}"
       ],
@@ -2925,6 +3105,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ak.{P}"
       ],
@@ -2955,6 +3138,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.az.{P}"
       ],
@@ -2985,6 +3171,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ar.{P}"
       ],
@@ -3015,6 +3204,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ca.{P}"
       ],
@@ -3045,6 +3237,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.co.{P}"
       ],
@@ -3075,6 +3270,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ct.{P}"
       ],
@@ -3105,6 +3303,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.de.{P}"
       ],
@@ -3135,6 +3336,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.dc.{P}"
       ],
@@ -3165,6 +3369,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.fl.{P}"
       ],
@@ -3195,6 +3402,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ga.{P}"
       ],
@@ -3225,6 +3435,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.hi.{P}"
       ],
@@ -3255,6 +3468,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.id.{P}"
       ],
@@ -3285,6 +3501,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.il.{P}"
       ],
@@ -3315,6 +3534,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.in.{P}"
       ],
@@ -3345,6 +3567,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ia.{P}"
       ],
@@ -3375,6 +3600,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ks.{P}"
       ],
@@ -3405,6 +3633,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ky.{P}"
       ],
@@ -3435,6 +3666,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.la.{P}"
       ],
@@ -3465,6 +3699,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.me.{P}"
       ],
@@ -3495,6 +3732,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.md.{P}"
       ],
@@ -3525,6 +3765,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ma.{P}"
       ],
@@ -3555,6 +3798,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.mi.{P}"
       ],
@@ -3585,6 +3831,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.mn.{P}"
       ],
@@ -3615,6 +3864,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ms.{P}"
       ],
@@ -3645,6 +3897,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.mo.{P}"
       ],
@@ -3675,6 +3930,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.mt.{P}"
       ],
@@ -3705,6 +3963,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ne.{P}"
       ],
@@ -3735,6 +3996,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nv.{P}"
       ],
@@ -3765,6 +4029,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nh.{P}"
       ],
@@ -3795,6 +4062,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nj.{P}"
       ],
@@ -3825,6 +4095,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nm.{P}"
       ],
@@ -3855,6 +4128,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ny.{P}"
       ],
@@ -3885,6 +4161,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nc.{P}"
       ],
@@ -3915,6 +4194,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.nd.{P}"
       ],
@@ -3945,6 +4227,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.oh.{P}"
       ],
@@ -3975,6 +4260,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ok.{P}"
       ],
@@ -4005,6 +4293,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.or.{P}"
       ],
@@ -4035,6 +4326,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.pa.{P}"
       ],
@@ -4065,6 +4359,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ri.{P}"
       ],
@@ -4095,6 +4392,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.sc.{P}"
       ],
@@ -4125,6 +4425,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.sd.{P}"
       ],
@@ -4155,6 +4458,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.tn.{P}"
       ],
@@ -4185,6 +4491,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.tx.{P}"
       ],
@@ -4215,6 +4524,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.ut.{P}"
       ],
@@ -4245,6 +4557,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.vt.{P}"
       ],
@@ -4275,6 +4590,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.va.{P}"
       ],
@@ -4305,6 +4623,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.wa.{P}"
       ],
@@ -4335,6 +4656,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.wv.{P}"
       ],
@@ -4365,6 +4689,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.wi.{P}"
       ],
@@ -4395,6 +4722,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.wy.{P}"
       ],
@@ -4425,6 +4755,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.gu.{P}"
       ],
@@ -4455,6 +4788,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.total_payment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.total_payment_error_rate.vi.{P}"
       ],
@@ -4475,6 +4811,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4503,6 +4840,9 @@
         "fns"
       ],
       "aliases": [],
+      "source_concepts": [
+        "fns.snap.underpayment_error_rate"
+      ],
       "rid_patterns": [
         "fns.snap.underpayment_payment_error_rate.us.{P}.official_release"
       ],
@@ -4523,6 +4863,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4545,6 +4886,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4567,6 +4909,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4589,6 +4932,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4618,6 +4962,9 @@
       ],
       "aliases": [
         "ons.cpi.annual_rate.may_2026"
+      ],
+      "source_concepts": [
+        "ons.cpi.annual_rate"
       ],
       "rid_patterns": [
         "ons.cpi.annual_rate.{P}.first_print"
@@ -4651,6 +4998,9 @@
       "aliases": [
         "ons.cpih.annual_rate.2026_05"
       ],
+      "source_concepts": [
+        "ons.cpih.annual_rate"
+      ],
       "rid_patterns": [
         "ons.cpih.annual_rate.{P}"
       ],
@@ -4681,6 +5031,9 @@
         "ons"
       ],
       "aliases": [
+        "ons.gdp.monthly_growth.april_2026"
+      ],
+      "source_concepts": [
         "ons.gdp.monthly_growth.april_2026"
       ],
       "rid_patterns": [
@@ -4715,6 +5068,9 @@
       "aliases": [
         "ons.hmrc.paye_payrolled_employees.may_2026"
       ],
+      "source_concepts": [
+        "ons.hmrc.paye_payrolled_employees"
+      ],
       "rid_patterns": [
         "ons.hmrc.paye_payrolled_employees.{P}.first_print"
       ],
@@ -4747,6 +5103,9 @@
       "aliases": [
         "ons.labour.unemployment_rate.february_to_april_2026"
       ],
+      "source_concepts": [
+        "ons.labour.unemployment_rate"
+      ],
       "rid_patterns": [
         "ons.labour.unemployment_rate.{P}.first_print"
       ],
@@ -4777,8 +5136,10 @@
         "ons"
       ],
       "aliases": [
-        "ons.pusf.j5ii",
         "ons.pusf.j5ii.public_sector_net_borrowing_ex_banks.may_2026"
+      ],
+      "source_concepts": [
+        "ons.pusf.j5ii"
       ],
       "rid_patterns": [
         "ons.pusf.j5ii.public_sector_net_borrowing_ex_banks.{P}.first_print"
@@ -4812,6 +5173,9 @@
       "aliases": [
         "ons.retail_sales.volume_mom.may_2026"
       ],
+      "source_concepts": [
+        "ons.retail_sales.volume_mom"
+      ],
       "rid_patterns": [
         "ons.retail_sales.volume_mom.{P}.first_print"
       ],
@@ -4844,6 +5208,9 @@
       "aliases": [
         "rba.cash_rate_target.after_june_2026"
       ],
+      "source_concepts": [
+        "rba.cash_rate_target"
+      ],
       "rid_patterns": [
         "rba.cash_rate_target.{P}"
       ],
@@ -4864,6 +5231,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4886,6 +5254,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4908,6 +5277,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -4935,7 +5305,8 @@
       "sources": [
         "statcan"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "v65201210"
       ],
       "rid_patterns": [
@@ -4970,6 +5341,9 @@
       "aliases": [
         "statcan.building_permits.total_value_mom.canada.april_2026"
       ],
+      "source_concepts": [
+        "statcan.building_permits.total_value_mom.canada.april_2026"
+      ],
       "rid_patterns": [
         "statcan.building_permits.total_value_mom.canada.{P}.first_print"
       ],
@@ -5000,7 +5374,9 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.cpi.all_items_annual_rate.canada.may_2026",
+        "statcan.cpi.all_items_annual_rate.canada.may_2026"
+      ],
+      "source_concepts": [
         "v41690973"
       ],
       "rid_patterns": [
@@ -5033,7 +5409,9 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.cpi.allitems.yoy.2026-05",
+        "statcan.cpi.allitems.yoy.2026-05"
+      ],
+      "source_concepts": [
         "v41690973"
       ],
       "rid_patterns": [
@@ -5066,7 +5444,9 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.employment_insurance.regular_beneficiaries.canada.may_2026",
+        "statcan.employment_insurance.regular_beneficiaries.canada.may_2026"
+      ],
+      "source_concepts": [
         "v64549350"
       ],
       "rid_patterns": [
@@ -5102,6 +5482,9 @@
         "statcan.employment_insurance.regular_beneficiaries",
         "statcan.employment_insurance.regular_beneficiaries.canada.april_2026"
       ],
+      "source_concepts": [
+        "statcan.employment_insurance.regular_beneficiaries"
+      ],
       "rid_patterns": [
         "statcan.employment_insurance.regular_beneficiaries.canada.{P}.first_print"
       ],
@@ -5132,7 +5515,9 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.gdp_by_industry.monthly_growth.april_2026",
+        "statcan.gdp_by_industry.monthly_growth.april_2026"
+      ],
+      "source_concepts": [
         "v65201210"
       ],
       "rid_patterns": [
@@ -5165,6 +5550,9 @@
         "statcan"
       ],
       "aliases": [],
+      "source_concepts": [
+        "statcan.lfs.employment_change"
+      ],
       "rid_patterns": [
         "statcan.lfs.employment_change.canada.{P}.first_print"
       ],
@@ -5195,6 +5583,9 @@
         "statcan"
       ],
       "aliases": [],
+      "source_concepts": [
+        "statcan.lfs.unemployment_rate"
+      ],
       "rid_patterns": [
         "statcan.lfs.unemployment_rate.canada.{P}.first_print"
       ],
@@ -5225,8 +5616,10 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.retail_trade.sales_mom",
         "statcan.retail_trade.sales_mom.canada.april_2026"
+      ],
+      "source_concepts": [
+        "statcan.retail_trade.sales_mom"
       ],
       "rid_patterns": [
         "statcan.retail_trade.sales_mom.canada.{P}.first_print"
@@ -5258,8 +5651,10 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.wholesale_trade.sales_mom_exclusions",
         "statcan.wholesale_trade.sales_mom_exclusions.canada.april_2026"
+      ],
+      "source_concepts": [
+        "statcan.wholesale_trade.sales_mom_exclusions"
       ],
       "rid_patterns": [
         "statcan.wholesale_trade.sales_mom_exclusions.canada.{P}.first_print"
@@ -5291,8 +5686,10 @@
         "statjp"
       ],
       "aliases": [
-        "japan.cpi.all_items_yoy",
         "statjp.cpi.all_items_annual_rate.japan.may_2026"
+      ],
+      "source_concepts": [
+        "japan.cpi.all_items_yoy"
       ],
       "rid_patterns": [
         "statjp.cpi.all_items_annual_rate.japan.{P}.first_print"
@@ -5324,8 +5721,10 @@
         "stat_jp"
       ],
       "aliases": [
-        "e-Stat statInfId 000040461676 (series 0001, all items)",
         "statjp.cpi.tokyo_all_items_annual_rate.june_2026"
+      ],
+      "source_concepts": [
+        "e-Stat statInfId 000040461676 (series 0001, all items)"
       ],
       "rid_patterns": [
         "statjp.cpi.tokyo_all_items_annual_rate.{P}.preliminary"
@@ -5347,6 +5746,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5375,8 +5775,10 @@
         "stat_jp"
       ],
       "aliases": [
-        "stat.go.jp kakei sokuhou monthly page",
         "statjp.household_spending.real_yoy.two_or_more_person_households.may_2026"
+      ],
+      "source_concepts": [
+        "stat.go.jp kakei sokuhou monthly page"
       ],
       "rid_patterns": [
         "statjp.household_spending.real_yoy.two_or_more_person_households.{P}.first_print"
@@ -5408,8 +5810,10 @@
         "stat_jp"
       ],
       "aliases": [
-        "stat.go.jp roudou sokuhou monthly page",
         "statjp.lfs.unemployment_rate.japan.may_2026"
+      ],
+      "source_concepts": [
+        "stat.go.jp roudou sokuhou monthly page"
       ],
       "rid_patterns": [
         "statjp.lfs.unemployment_rate.japan.{P}.first_print"
@@ -5443,6 +5847,9 @@
       "aliases": [
         "treasury.mts.monthly_deficit.may_2026"
       ],
+      "source_concepts": [
+        "treasury.mts.monthly_deficit.may_2026"
+      ],
       "rid_patterns": [
         "treasury.mts.monthly_deficit.{P}.first_print"
       ],
@@ -5473,9 +5880,11 @@
         "bea"
       ],
       "aliases": [
-        "PCEPILFE",
         "us.bea.core_pce.mom_sa.2026-05",
         "us.bea.core_pce.mom_sa.2026-06"
+      ],
+      "source_concepts": [
+        "PCEPILFE"
       ],
       "rid_patterns": [
         "us.bea.core_pce.mom_sa.{P}"
@@ -5507,8 +5916,10 @@
         "census"
       ],
       "aliases": [
-        "census.housing_starts.saar",
         "us.census.housing_starts.total_saar.2026_05"
+      ],
+      "source_concepts": [
+        "census.housing_starts.saar"
       ],
       "rid_patterns": [
         "us.census.housing_starts.total_saar.{P}"
@@ -5539,7 +5950,8 @@
       "sources": [
         "dol_eta"
       ],
-      "aliases": [
+      "aliases": [],
+      "source_concepts": [
         "ICSA"
       ],
       "rid_patterns": [
@@ -5572,8 +5984,10 @@
         "dol"
       ],
       "aliases": [
-        "dol.eta.initial_claims.sa",
         "us.dol.initial_claims.sa.week_2026_06_13"
+      ],
+      "source_concepts": [
+        "dol.eta.initial_claims.sa"
       ],
       "rid_patterns": [
         "us.dol.initial_claims.sa.{P}"
@@ -5605,8 +6019,10 @@
         "fed"
       ],
       "aliases": [
-        "fomc.federal_funds_target_range_upper",
         "us.fed.fomc.target_range_upper.2026_06"
+      ],
+      "source_concepts": [
+        "fomc.federal_funds_target_range_upper"
       ],
       "rid_patterns": [
         "us.fed.fomc.target_range_upper.{P}"
@@ -5638,8 +6054,10 @@
         "fed"
       ],
       "aliases": [
-        "fed.g17.industrial_production.total_index_mom",
         "us.frb.industrial_production.total.mom_sa.2026_05"
+      ],
+      "source_concepts": [
+        "fed.g17.industrial_production.total_index_mom"
       ],
       "rid_patterns": [
         "us.frb.industrial_production.total.mom_sa.{P}"
@@ -5661,6 +6079,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5679,6 +6098,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5697,6 +6117,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5715,6 +6136,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5733,6 +6155,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5751,6 +6174,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,
@@ -5773,6 +6197,7 @@
       "entity": null,
       "sources": [],
       "aliases": [],
+      "source_concepts": [],
       "rid_patterns": [],
       "first_observed_period": null,
       "last_observed_period": null,

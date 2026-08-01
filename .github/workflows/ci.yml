@@ -39,6 +39,27 @@ jobs:
           uv run --locked python scripts/build_series_catalog.py --check
           uv run --locked pytest tests/test_build_series_catalog.py -q
 
+      # The UUID registry is the append-only minting ledger behind the
+      # series catalog: a PR may extend it, never edit or truncate it.
+      # --check already proves catalog/registry agreement and (via git)
+      # that the working tree extends HEAD; this step closes the
+      # cross-commit hole by proving the PR head extends the PR BASE.
+      - name: Series UUID registry append-only vs base
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          if git cat-file -e "$BASE_SHA:ledger/series_uuid_registry.jsonl" \
+              2>/dev/null; then
+            git show "$BASE_SHA:ledger/series_uuid_registry.jsonl" \
+              > /tmp/base-series-uuid-registry.jsonl
+          else
+            : > /tmp/base-series-uuid-registry.jsonl
+          fi
+          uv run --locked python scripts/build_series_catalog.py \
+            --verify-registry-append-only /tmp/base-series-uuid-registry.jsonl
+
       - name: Lint Arch surface
         run: >
           uv run ruff check
