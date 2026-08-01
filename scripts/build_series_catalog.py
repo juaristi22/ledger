@@ -1206,6 +1206,18 @@ def main(argv: list[str] | None = None) -> int:
         f"dropped {key}: uuid {row_uuid} would vanish from the catalog"
         for key, row_uuid in plan["dropped"]
     ]
+    if not existing.rows and registry.latest:
+        # Without the prior catalog, curated naming and aliases are gone: a
+        # renamed identity re-keys away from its registry binding and would
+        # fresh-mint while the old binding goes dormant — a silent remint
+        # that survives every append-only check. Rebuilding from a bare
+        # registry is therefore itself a gated identity event.
+        identity_changes.append(
+            f"prior catalog missing while the registry holds "
+            f"{len(registry.latest)} bindings — restore "
+            f"{args.catalog} from git history (rebuilding without curated "
+            "naming/alias memory can silently re-key renamed identities)"
+        )
 
     if args.check:
         failures: list[str] = []

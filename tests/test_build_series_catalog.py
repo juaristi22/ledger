@@ -684,3 +684,19 @@ def test_committed_catalog_is_current_and_valid() -> None:
     assert committed["uuid_registry_sha256"] == registry.sha256()
     assert bsc.DOCKET_SEED.exists()
     assert len(committed["series"]) == 201
+
+
+def test_rebuild_without_prior_catalog_is_gated(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Deleting the committed catalog loses curated naming/alias memory: a
+    # renamed identity would re-key away from its registry binding and
+    # fresh-mint silently. The builder must treat a bare-registry rebuild
+    # as an identity event.
+    argv = _repo(tmp_path, [_row("bls.cps.unemployment_rate")])
+    assert bsc.main(argv) == 0
+    (tmp_path / "catalog.json").unlink()
+    assert bsc.main(argv) == 1
+    assert bsc.main(
+        argv + ["--allow-remint", "--remint-note", "rebuild from registry"]
+    ) == 0
