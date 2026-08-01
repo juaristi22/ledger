@@ -6,6 +6,16 @@
   "docket_seed_sha256": "930424fb48c0be4c9e2ce17d4e0f2a6be886408e814c80324174a7a303fa0271",
   "uuid_registry_sha256": "c4ccda3f1746ff06cf8cc17dc221ea3a82b7b16a5d719361e2025bc5d7b63356",
   "suspect_segments": [],
+  "overlap_stripped_segments": [
+    "2026-06-18",
+    "2026_06_18",
+    "after_june_2026",
+    "after_mpc_june_2026",
+    "february_to_april_2026",
+    "week_2026-06-13",
+    "week_2026_06_13",
+    "week_ending_2026_06_06"
+  ],
   "ambiguous_aliases": [],
   "series": [
     {
@@ -2446,41 +2456,6 @@
       "observation_count": 2
     },
     {
-      "uuid": "74ce2da4-28ed-409a-a0f1-2a7c40dc7caf",
-      "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
-      "family_patterns": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
-      ],
-      "status": "observed",
-      "unit": "percent",
-      "cadence": "month",
-      "geography": {
-        "level": "region",
-        "id": "EA21",
-        "vintage": "current",
-        "name": "Euro area"
-      },
-      "entity": {
-        "name": "economy",
-        "role": "aggregate"
-      },
-      "sources": [
-        "eurostat"
-      ],
-      "aliases": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.june_2026"
-      ],
-      "source_concepts": [
-        "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
-      ],
-      "rid_patterns": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.flash"
-      ],
-      "first_observed_period": "2026-06",
-      "last_observed_period": "2026-06",
-      "observation_count": 1
-    },
-    {
       "uuid": "815299ce-841a-4115-9af2-3b52fc036834",
       "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
       "family_patterns": [
@@ -2513,6 +2488,41 @@
       ],
       "first_observed_period": "2026-05",
       "last_observed_period": "2026-05",
+      "observation_count": 1
+    },
+    {
+      "uuid": "74ce2da4-28ed-409a-a0f1-2a7c40dc7caf",
+      "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
+      "family_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "month",
+      "geography": {
+        "level": "region",
+        "id": "EA21",
+        "vintage": "current",
+        "name": "Euro area"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "eurostat"
+      ],
+      "aliases": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.june_2026"
+      ],
+      "source_concepts": [
+        "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
+      ],
+      "rid_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.flash"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {

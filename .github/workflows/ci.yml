@@ -40,14 +40,22 @@ jobs:
           uv run --locked pytest tests/test_build_series_catalog.py -q
 
       # The UUID registry is the append-only minting ledger behind the
-      # series catalog: a PR may extend it, never edit or truncate it.
+      # series catalog: a change may extend it, never edit or truncate it.
       # --check already proves catalog/registry agreement and (via git)
       # that the working tree extends HEAD; this step closes the
-      # cross-commit hole by proving the PR head extends the PR BASE.
+      # cross-commit hole by proving the new head extends the comparison
+      # base — the PR base for pull requests, the pre-push head for pushes.
+      # A push whose before-sha is unfetchable (history rewrite) fails
+      # loudly rather than skipping.
       - name: Series UUID registry append-only vs base
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'pull_request' ||
+          (github.event_name == 'push' &&
+           github.event.before != '0000000000000000000000000000000000000000')
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request'
+            && github.event.pull_request.base.sha
+            || github.event.before }}
         run: |
           git fetch --no-tags --depth=1 origin "$BASE_SHA"
           if git cat-file -e "$BASE_SHA:ledger/series_uuid_registry.jsonl" \

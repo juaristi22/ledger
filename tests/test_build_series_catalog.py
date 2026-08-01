@@ -257,8 +257,11 @@ def test_cross_geography_name_match_never_inherits(
     assert later["series"][0]["uuid"] != us_uuid
     # The US identity's UUID vanishing is loud, not silent.
     assert [key for key, _ in plan["dropped"]] == [
-        ("fns.snap.error_rate", "country|0100000US|current",
-         "economy|aggregate")
+        (
+            "fns.snap.error_rate",
+            bsc._geo_key(US),
+            bsc._entity_key({"name": "economy", "role": "aggregate"}),
+        )
     ]
 
 
@@ -478,9 +481,8 @@ def test_registry_chain_validation(tmp_path: pathlib.Path) -> None:
         json.dumps(mint) + "\n" + json.dumps(chained) + "\n", encoding="utf-8"
     )
     registry = bsc.UuidRegistry.load(path)
-    assert registry.binding(("a.one", "None|None|None", "None|None")) == (
-        rebind["uuid"]
-    )
+    key = ("a.one", bsc._geo_key(None), bsc._entity_key(None))
+    assert registry.binding(key) == rebind["uuid"]
     wrong_chain = dict(
         rebind, supersedes="99999999-9999-4999-8999-999999999999", note="x"
     )
@@ -596,11 +598,15 @@ def test_main_remint_guard_and_ceremony(tmp_path: pathlib.Path) -> None:
     assert bsc.main(argv + ["--check"]) == 0
 
 
-def test_main_dropped_identity_requires_allow_remint(
+def test_main_dropped_identity_retires_then_revives(
     tmp_path: pathlib.Path,
 ) -> None:
     argv = _repo(tmp_path, [_row("bls.cps.unemployment_rate")])
     assert bsc.main(argv) == 0
+    original = json.loads((tmp_path / "catalog.json").read_text())
+    docket_uuid = next(
+        r["uuid"] for r in original["series"] if r["status"] == "docket-only"
+    )
     (tmp_path / "seed.json").write_text(
         json.dumps({"series": []}), encoding="utf-8"
     )
@@ -608,10 +614,72 @@ def test_main_dropped_identity_requires_allow_remint(
     assert bsc.main(argv + ["--allow-remint", "--remint-note", "seed cut"]) == 0
     catalog = json.loads((tmp_path / "catalog.json").read_text())
     assert len(catalog["series"]) == 1
-    # The binding stays dormant in the registry: no line was removed.
+    # The drop is an explicit retire event; no line was edited or removed.
     lines = (tmp_path / "registry.jsonl").read_text().splitlines()
-    assert len(lines) == 2
+    assert len(lines) == 3
+    retire = json.loads(lines[-1])
+    assert retire["retired"] is True and retire["uuid"] == docket_uuid
+    assert retire["note"] == "seed cut"
     assert bsc.main(argv + ["--check"]) == 0
+    # Re-seeding the identity revives the SAME uuid — minted once, ever.
+    (tmp_path / "seed.json").write_text(json.dumps(SEED), encoding="utf-8")
+    assert bsc.main(argv) == 0
+    catalog = json.loads((tmp_path / "catalog.json").read_text())
+    revived_row = next(
+        r for r in catalog["series"] if r["status"] == "docket-only"
+    )
+    assert revived_row["uuid"] == docket_uuid
+    lines = (tmp_path / "registry.jsonl").read_text().splitlines()
+    assert len(lines) == 4
+    revive = json.loads(lines[-1])
+    assert revive["revived"] is True and revive["uuid"] == docket_uuid
+    assert bsc.main(argv + ["--check"]) == 0
+
+
+def test_partial_catalog_deletion_cannot_silently_remint(
+    tmp_path: pathlib.Path,
+) -> None:
+    # The v3-review follow-up: deleting SOME rows (not the whole catalog)
+    # must not let their identities re-mint silently — every live binding's
+    # uuid has to stay in the catalog or be explicitly retired.
+    argv = _repo(
+        tmp_path,
+        [_row("bls.cps.unemployment_rate"), _row("bea.real_gdp.saar")],
+    )
+    assert bsc.main(argv) == 0
+    catalog = json.loads((tmp_path / "catalog.json").read_text())
+    kept = [r for r in catalog["series"] if r["concept"] != "bea.real_gdp.saar"]
+    removed_uuid = next(
+        r["uuid"] for r in catalog["series"]
+        if r["concept"] == "bea.real_gdp.saar"
+    )
+    catalog["series"] = kept
+    (tmp_path / "catalog.json").write_text(
+        json.dumps(catalog, indent=2) + "\n", encoding="utf-8"
+    )
+    # The observations still exist, so rebuilding restores the row with its
+    # registry uuid — but a tampered catalog alone must fail --check on the
+    # liveness rule before any rebuild.
+    problems = bsc.registry_agreement_problems(
+        catalog, bsc.UuidRegistry.load(tmp_path / "registry.jsonl")
+    )
+    assert any(removed_uuid in p and "no catalog row" in p for p in problems)
+    assert bsc.main(argv + ["--check"]) == 1
+    # Rebuild heals: the registry still holds the binding.
+    assert bsc.main(argv) == 0
+    healed = json.loads((tmp_path / "catalog.json").read_text())
+    assert any(r["uuid"] == removed_uuid for r in healed["series"])
+
+
+def test_dimension_keys_are_injective() -> None:
+    # Delimiter-joined keys let crafted values collide across fields.
+    assert bsc._geo_key(
+        {"level": "a|b", "id": "c", "vintage": None}
+    ) != bsc._geo_key({"level": "a", "id": "b|c", "vintage": None})
+    assert bsc._geo_key({"level": "None"}) != bsc._geo_key(None)
+    assert bsc._entity_key(
+        {"name": 'x", "y', "role": None}
+    ) != bsc._entity_key({"name": "x", "role": "y"})
 
 
 def test_check_rejects_uuid_disjoint_catalog(tmp_path: pathlib.Path) -> None:
@@ -680,6 +748,18 @@ def test_committed_catalog_is_current_and_valid() -> None:
     assert bsc.validate_uuids(committed) == []
     assert bsc.registry_agreement_problems(committed, registry) == []
     assert committed["suspect_segments"] == []
+    # Every stripped segment that was a window-overlap judgment (rather
+    # than a direct spelling of the row period) stays auditable.
+    assert committed["overlap_stripped_segments"] == [
+        "2026-06-18",
+        "2026_06_18",
+        "after_june_2026",
+        "after_mpc_june_2026",
+        "february_to_april_2026",
+        "week_2026-06-13",
+        "week_2026_06_13",
+        "week_ending_2026_06_06",
+    ]
     assert committed["docket_seed_sha256"] is not None
     assert committed["uuid_registry_sha256"] == registry.sha256()
     assert bsc.DOCKET_SEED.exists()
