@@ -317,13 +317,60 @@ def build_catalog(
     rows = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
     identities = build_identities(rows)
 
+    # Canonicalize each observed bucket through the existing catalog: a
+    # curated alias or a unique prior concept/alias hit keeps BOTH the prior
+    # UUID and the prior canonical concept (curation owns naming; observed
+    # spellings become aliases). Buckets landing on the same canonical
+    # identity merge.
+    canonical: dict[tuple[str, str, str], dict] = {}
+    for key in sorted(identities):
+        ident = identities[key]
+        concept, geo_key, entity_key = key
+        names = ident["concepts"] | ident["source_concepts"] | {concept}
+        prior = existing.match(key, names)
+        canon_concept = prior["concept"] if prior else concept
+        canon_key = (canon_concept, geo_key, entity_key)
+        bucket = canonical.setdefault(
+            canon_key,
+            {
+                "prior": prior,
+                "patterns": set(),
+                "concepts": set(),
+                "source_concepts": set(),
+                "rid_patterns": set(),
+                "suspects": set(),
+                "units": Counter(),
+                "period_types": Counter(),
+                "geography": ident["geography"],
+                "entity": ident["entity"],
+                "sources": set(),
+                "period_values": [],
+                "count": 0,
+            },
+        )
+        if bucket["prior"] is None:
+            bucket["prior"] = prior
+        elif prior is not None and prior["uuid"] != bucket["prior"]["uuid"]:
+            raise SystemExit(
+                f"identity {canon_key} inherits two different UUIDs "
+                f"({bucket['prior']['uuid']}, {prior['uuid']}) — curate the "
+                "existing catalog before regenerating"
+            )
+        bucket["patterns"] |= ident["patterns"]
+        bucket["concepts"] |= ident["concepts"]
+        bucket["source_concepts"] |= ident["source_concepts"]
+        bucket["rid_patterns"] |= ident["rid_patterns"]
+        bucket["suspects"] |= ident["suspects"]
+        bucket["units"] += ident["units"]
+        bucket["period_types"] += ident["period_types"]
+        bucket["sources"] |= ident["sources"]
+        bucket["period_values"] += ident["period_values"]
+        bucket["count"] += ident["count"]
+
     series: list[dict] = []
     used_uuids: dict[str, tuple] = {}
 
-    def mint(key: tuple, names: set[str]) -> tuple[str, list[str]]:
-        prior = existing.match(key, names)
-        row_uuid = prior["uuid"] if prior else str(uuid_module.uuid4())
-        curated_aliases = list(prior.get("aliases", [])) if prior else []
+    def claim_uuid(row_uuid: str, key: tuple) -> str:
         if row_uuid in used_uuids:
             raise SystemExit(
                 f"UUID collision: {row_uuid} claimed by both "
@@ -331,34 +378,37 @@ def build_catalog(
                 "catalog before regenerating"
             )
         used_uuids[row_uuid] = key
-        return row_uuid, curated_aliases
+        return row_uuid
 
     all_suspects: set[str] = set()
-    for key in sorted(identities):
-        ident = identities[key]
-        concept, _, _ = key
-        names = ident["concepts"] | ident["source_concepts"] | {concept}
-        row_uuid, curated_aliases = mint(key, names)
+    for canon_key in sorted(canonical):
+        bucket = canonical[canon_key]
+        concept, _, _ = canon_key
+        prior = bucket["prior"]
+        row_uuid = claim_uuid(
+            prior["uuid"] if prior else str(uuid_module.uuid4()), canon_key
+        )
+        curated_aliases = set(prior.get("aliases", [])) if prior else set()
         aliases = sorted(
-            (ident["concepts"] | ident["source_concepts"] | set(curated_aliases))
+            (bucket["concepts"] | bucket["source_concepts"] | curated_aliases)
             - {concept}
         )
-        all_suspects.update(ident["suspects"])
+        all_suspects.update(bucket["suspects"])
         series.append({
             "uuid": row_uuid,
             "concept": concept,
-            "family_patterns": sorted(ident["patterns"]),
+            "family_patterns": sorted(bucket["patterns"]),
             "status": "observed",
-            "unit": _sole(ident["units"], "unit", key),
-            "cadence": _sole(ident["period_types"], "cadence", key),
-            "geography": ident["geography"],
-            "entity": ident["entity"],
-            "sources": sorted(ident["sources"]),
+            "unit": _sole(bucket["units"], "unit", canon_key),
+            "cadence": _sole(bucket["period_types"], "cadence", canon_key),
+            "geography": bucket["geography"],
+            "entity": bucket["entity"],
+            "sources": sorted(bucket["sources"]),
             "aliases": aliases,
-            "rid_patterns": sorted(ident["rid_patterns"]),
-            "first_observed_period": min(ident["period_values"], default=None),
-            "last_observed_period": max(ident["period_values"], default=None),
-            "observation_count": ident["count"],
+            "rid_patterns": sorted(bucket["rid_patterns"]),
+            "first_observed_period": min(bucket["period_values"], default=None),
+            "last_observed_period": max(bucket["period_values"], default=None),
+            "observation_count": bucket["count"],
         })
 
     docket_raw = b""
@@ -398,7 +448,11 @@ def build_catalog(
                         "no geography mapping; extend COUNTRY_GEOGRAPHY"
                     )
             key = (concept, _geo_key(geography), _entity_key(None))
-            row_uuid, curated_aliases = mint(key, {concept})
+            prior = existing.match(key, {concept})
+            row_uuid = claim_uuid(
+                prior["uuid"] if prior else str(uuid_module.uuid4()), key
+            )
+            curated_aliases = set(prior.get("aliases", [])) if prior else set()
             row = {
                 "uuid": row_uuid,
                 "concept": concept,
