@@ -34,6 +34,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked --all-extras
 
+      - name: Series catalog current and tested
+        run: |
+          uv run --locked python scripts/build_series_catalog.py --check
+          uv run --locked pytest tests/test_build_series_catalog.py -q
+
       - name: Lint Arch surface
         run: >
           uv run ruff check
@@ -58,6 +63,8 @@ jobs:
           micro/us/validation_dashboard.py
           calibration/constraints.py
           calibration/targets.py
+          scripts/build_series_catalog.py
+          tests/test_build_series_catalog.py
           tests/test_arch_facts.py
           tests/test_arch_namespace.py
           tests/test_arch_normalization.py

@@ -1,11 +1,21 @@
 {
-  "comment": "Canonical series catalog. One row per series family; uuid is minted once and never re-minted (regeneration preserves it by concept). Consumers reference series by uuid or concept only. Regenerate with scripts/build_series_catalog.py; verify with --check. Cross-spelling merges are manual curation: keep the surviving row's uuid, move absorbed spellings to aliases.",
-  "generator_version": 1,
+  "comment": "Canonical series catalog. One row per (concept, geography, entity) identity; uuid is minted once and never re-minted (regeneration preserves it by identity, then by concept/alias). Consumers reference series by uuid or concept only. Regenerate with scripts/build_series_catalog.py; verify with --check. Cross-spelling and cross-vintage merges are manual curation: keep the surviving row's uuid, move absorbed spellings to aliases — curated aliases persist across regeneration. Aliases listed in ambiguous_aliases match multiple rows and never drive identity inheritance.",
+  "generator_version": 2,
   "observations_sha256": "63127ff427a4aa3884f54dd1ee070ab631c15ebb38f23fdc9095a45e9204109f",
   "observation_rows": 168,
+  "docket_seed_sha256": "930424fb48c0be4c9e2ce17d4e0f2a6be886408e814c80324174a7a303fa0271",
+  "suspect_segments": [],
+  "ambiguous_aliases": [
+    "CPI/3.10001.10.50.M",
+    "JTSJOL",
+    "PCEPILFE",
+    "prc_hicp_minr/M.RCH_A.TOTAL.EA21",
+    "v41690973",
+    "v65201210"
+  ],
   "series": [
     {
-      "uuid": "0a67f2eb-4776-416e-a9d6-8790e4d40d3d",
+      "uuid": "e344ff46-5b07-401e-9203-72fe4d643aef",
       "concept": "abs.building_approvals.total_dwellings_mom.australia",
       "family_patterns": [
         "abs.building_approvals.total_dwellings_mom.australia.{P}"
@@ -14,8 +24,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -37,7 +48,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "cb0a5069-e734-4351-a07b-b3c1d3b30c6d",
+      "uuid": "17f78cc1-f82a-44a6-9620-fc10c310f8f1",
       "concept": "abs.cpi.all_groups.yoy",
       "family_patterns": [
         "abs.cpi.all_groups.yoy"
@@ -46,8 +57,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -68,7 +80,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "b38445cc-367f-47ca-9bb2-393890aa4d14",
+      "uuid": "b4935b21-ee8b-4076-b498-7babcf57ba07",
       "concept": "abs.cpi.all_groups_annual_rate.australia",
       "family_patterns": [
         "abs.cpi.all_groups_annual_rate.australia.{P}"
@@ -77,8 +89,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -100,7 +113,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "11bb2c93-9bf0-47fa-8609-cf88277b1c01",
+      "uuid": "977a5286-88de-4ebe-82aa-2d3bca2d8360",
       "concept": "abs.cpi_indicator.allgroups.yoy",
       "family_patterns": [
         "abs.cpi_indicator.allgroups.yoy.{P}"
@@ -109,8 +122,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -132,7 +146,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "73365ddc-a6c2-4d27-af69-dcfc5cea5cfd",
+      "uuid": "b17f788a-411a-4d9c-bb45-68d412eddeed",
       "concept": "abs.labour.employment_change.australia",
       "family_patterns": [
         "abs.labour.employment_change.australia.{P}"
@@ -141,8 +155,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -165,7 +180,7 @@
       "observation_count": 2
     },
     {
-      "uuid": "843e5bab-22f6-44ad-9df2-8f1e43882ce6",
+      "uuid": "f9067f72-71de-469c-8d18-c838e8ff0859",
       "concept": "abs.labour.unemployment_rate",
       "family_patterns": [
         "abs.labour.unemployment_rate"
@@ -183,7 +198,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "07353377-eccd-4023-b847-8866a3ad386a",
+      "uuid": "15214884-48b0-49f1-9d17-4f9b60e96fce",
       "concept": "abs.labour.unemployment_rate.australia",
       "family_patterns": [
         "abs.labour.unemployment_rate.australia.{P}"
@@ -192,8 +207,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -216,17 +232,18 @@
       "observation_count": 2
     },
     {
-      "uuid": "ae863b3f-47fd-4585-b5ea-6beb8e6ceb60",
-      "concept": "bank_of_canada.overnight_rate.after_june_2026",
+      "uuid": "8f65877d-6acb-4ee6-9158-b5448c526f21",
+      "concept": "bank_of_canada.overnight_rate",
       "family_patterns": [
-        "bank_of_canada.overnight_rate.after_june_2026"
+        "bank_of_canada.overnight_rate.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -236,16 +253,18 @@
       "sources": [
         "bank_of_canada"
       ],
-      "aliases": [],
-      "rid_patterns": [
+      "aliases": [
         "bank_of_canada.overnight_rate.after_june_2026"
+      ],
+      "rid_patterns": [
+        "bank_of_canada.overnight_rate.{P}"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "019a338e-df79-4c56-af6a-8ea5c610ab9d",
+      "uuid": "2b523a47-f470-4dc3-8d15-4797a709079d",
       "concept": "bea.core_pce.mom",
       "family_patterns": [
         "bea.core_pce.mom"
@@ -263,7 +282,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "f5b03100-26d3-47a2-82f5-ad833e4097de",
+      "uuid": "ae903852-8f94-4f58-ab5e-27068c9d46e1",
       "concept": "bea.disposable_personal_income.level",
       "family_patterns": [
         "bea.disposable_personal_income.level.{P}"
@@ -272,8 +291,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -295,7 +315,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "5d4a2990-6fb8-4517-b4d1-df90bf97b0e1",
+      "uuid": "c4172a11-ef6e-42eb-89c0-00da23b825e1",
       "concept": "bea.government_social_benefits.level",
       "family_patterns": [
         "bea.government_social_benefits.level.{P}"
@@ -304,8 +324,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -327,7 +348,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "8d836dd8-5942-4a56-b554-0bb44554a2fc",
+      "uuid": "540cce9c-6111-4547-a248-cc786deb8e1c",
       "concept": "bea.government_social_benefits.medicaid",
       "family_patterns": [
         "bea.government_social_benefits.medicaid.{P}"
@@ -336,8 +357,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -359,7 +381,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "4eb192e1-d663-482d-b960-2c04ab901f07",
+      "uuid": "b96f7aad-ffee-4849-a032-1343728c321d",
       "concept": "bea.government_social_benefits.medicare",
       "family_patterns": [
         "bea.government_social_benefits.medicare.{P}"
@@ -368,8 +390,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -391,7 +414,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "107564f7-ee16-463e-b1a7-7b109a2f3763",
+      "uuid": "73f44532-772a-428e-a255-08699bdb8f4e",
       "concept": "bea.government_social_benefits.social_security",
       "family_patterns": [
         "bea.government_social_benefits.social_security.{P}"
@@ -400,8 +423,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -423,7 +447,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "0f56dfe3-2cdd-4f81-9264-fefb74f022d0",
+      "uuid": "db938f25-1086-4faa-a9b6-dc378fd35ad8",
       "concept": "bea.pce.core_mom",
       "family_patterns": [
         "bea.pce.core_mom.{P}"
@@ -432,8 +456,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -455,7 +480,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "7e8c7edc-0aeb-4863-ada6-c98445fb835f",
+      "uuid": "622be0bf-ddaf-4051-a1ea-58dc4a34a67b",
       "concept": "bea.pce_price_index.monthly_change",
       "family_patterns": [
         "bea.pce_price_index.monthly_change.{P}"
@@ -464,8 +489,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -487,7 +513,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "5aaf7212-b599-4d52-b233-06d82bafee3d",
+      "uuid": "33f11e9e-085e-48e0-abb1-3a85f85f510c",
       "concept": "bea.personal_current_taxes.level",
       "family_patterns": [
         "bea.personal_current_taxes.level.{P}"
@@ -496,8 +522,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -519,7 +546,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "a2ab0909-0db8-4ba9-b1d3-1d109b182334",
+      "uuid": "1467ba0f-93fd-4727-96e7-09954992831b",
       "concept": "bea.real_gdp.saar.third_estimate",
       "family_patterns": [
         "bea.real_gdp.saar.{P}.third_estimate"
@@ -528,8 +555,9 @@
       "unit": "percent_growth",
       "cadence": "quarter",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -551,7 +579,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "e303a245-6b71-466d-a25a-343c2e51d09e",
+      "uuid": "1eabcc3f-c99a-4217-ba36-dcaeef5aef60",
       "concept": "bea.trade.goods_services_deficit",
       "family_patterns": [
         "bea.trade.goods_services_deficit"
@@ -569,7 +597,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "63dca7c9-7eb5-4a42-9737-90c0a0bdb11d",
+      "uuid": "fa09cffe-676f-4c84-8064-e9a7960338ad",
       "concept": "bea.wages_and_salaries.level",
       "family_patterns": [
         "bea.wages_and_salaries.level.{P}"
@@ -578,8 +606,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -601,7 +630,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "ccd49c74-dcde-4ab6-bb40-d90a035a3b67",
+      "uuid": "5a39ebcb-26da-46f3-9483-b8ba708a776e",
       "concept": "bls.ces.average_hourly_earnings_private_monthly_change",
       "family_patterns": [
         "bls.ces.average_hourly_earnings_private_monthly_change"
@@ -610,8 +639,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -632,7 +662,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "39252487-0710-42df-8cbe-e4ca60ff31c0",
+      "uuid": "11271834-da12-4926-a4ce-9f996fb6e7df",
       "concept": "bls.ces.nonfarm_payrolls.change",
       "family_patterns": [
         "bls.ces.nonfarm_payrolls.change"
@@ -650,26 +680,25 @@
       "observation_count": 0
     },
     {
-      "uuid": "b2d62920-5414-4e83-b6ed-91fa84fda47b",
+      "uuid": "88bb402f-81ab-43e1-b0d4-a3707d2cf10f",
       "concept": "bls.ces.total_nonfarm_payroll_change",
       "family_patterns": [
-        "bls.ces.total_nonfarm_payroll_change",
         "bls.ces.total_nonfarm_payroll_change.{P}"
       ],
       "status": "observed",
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
-        "name": "person",
-        "role": "nonfarm_payroll_employee"
+        "name": "economy",
+        "role": "aggregate"
       },
       "sources": [
-        "bls",
         "bls_ces"
       ],
       "aliases": [
@@ -679,12 +708,42 @@
       "rid_patterns": [
         "bls.ces.total_nonfarm_payroll_change.{P}.first_print"
       ],
-      "first_observed_period": "2026-05",
+      "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
-      "observation_count": 2
+      "observation_count": 1
     },
     {
-      "uuid": "17d3f396-e7cf-4955-8c06-b7370df4c735",
+      "uuid": "8735586f-8f28-43b3-92bf-d5f4f0cf06c8",
+      "concept": "bls.ces.total_nonfarm_payroll_change",
+      "family_patterns": [
+        "bls.ces.total_nonfarm_payroll_change"
+      ],
+      "status": "observed",
+      "unit": "thousands",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "person",
+        "role": "nonfarm_payroll_employee"
+      },
+      "sources": [
+        "bls"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "bls.ces.total_nonfarm_payroll_change.{P}.first_print"
+      ],
+      "first_observed_period": "2026-05",
+      "last_observed_period": "2026-05",
+      "observation_count": 1
+    },
+    {
+      "uuid": "1678deac-7af3-4012-92d8-ca70d4e4ad8b",
       "concept": "bls.cpi.owners_equivalent_rent_mom",
       "family_patterns": [
         "bls.cpi.owners_equivalent_rent_mom"
@@ -702,7 +761,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "3417de03-198f-4a6e-a2f8-f59a357c9e4a",
+      "uuid": "f21957d5-0017-4a38-9ec0-81dc8ee06b75",
       "concept": "bls.cpi.rent_primary_residence_mom",
       "family_patterns": [
         "bls.cpi.rent_primary_residence_mom"
@@ -720,7 +779,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "05e7a6ae-90c4-40f5-ab38-2426f213499d",
+      "uuid": "35f5c356-4da0-488f-8d4e-4edcf1c76536",
       "concept": "bls.cpi.services_less_energy_mom",
       "family_patterns": [
         "bls.cpi.services_less_energy_mom"
@@ -738,7 +797,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "173a2bb9-97c3-4a00-a4e8-9ccb7288d5dd",
+      "uuid": "13afafd9-60cc-41e7-a3eb-2e6e601bae64",
       "concept": "bls.cpi.services_less_rent_shelter_mom",
       "family_patterns": [
         "bls.cpi.services_less_rent_shelter_mom"
@@ -756,7 +815,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "41881396-3fb0-4a1f-bac9-6c8c58f73d20",
+      "uuid": "e26bb549-b24e-4971-93d4-4794f70d87d1",
       "concept": "bls.cpi.shelter_mom",
       "family_patterns": [
         "bls.cpi.shelter_mom"
@@ -774,7 +833,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "23a58ec2-2d41-4f17-ae3d-8affeda44fc1",
+      "uuid": "64198097-ede9-477c-8f3c-d5b247b2dae4",
       "concept": "bls.cpi.u.core_mom",
       "family_patterns": [
         "bls.cpi.u.core_mom.{P}"
@@ -783,8 +842,42 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "bls_cpi"
+      ],
+      "aliases": [
+        "CPILFESL",
+        "bls.cpi.u.core_mom.june_2026"
+      ],
+      "rid_patterns": [
+        "bls.cpi.u.core_mom.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f98732c4-59d1-4bb1-94dd-e23ea9db3775",
+      "concept": "bls.cpi.u.core_mom",
+      "family_patterns": [
+        "bls.cpi.u.core_mom.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent_growth",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -792,23 +885,20 @@
         "role": "cpi_u_less_food_energy"
       },
       "sources": [
-        "bls",
-        "bls_cpi"
+        "bls"
       ],
       "aliases": [
-        "CPILFESL",
-        "bls.cpi.u.core_mom.june_2026",
         "bls.cpi.u.core_mom.may_2026"
       ],
       "rid_patterns": [
         "bls.cpi.u.core_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "e6cf3897-504a-4fd2-b314-24c38e13cafb",
+      "uuid": "4b37d4ee-446a-449c-be74-59177dec5d25",
       "concept": "bls.cpi.u.headline_mom",
       "family_patterns": [
         "bls.cpi.u.headline_mom.{P}"
@@ -817,8 +907,42 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "bls_cpi"
+      ],
+      "aliases": [
+        "CPIAUCSL",
+        "bls.cpi.u.headline_mom.june_2026"
+      ],
+      "rid_patterns": [
+        "bls.cpi.u.headline_mom.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "41b3f275-2b6a-4e5b-a70a-a5dae8c83be6",
+      "concept": "bls.cpi.u.headline_mom",
+      "family_patterns": [
+        "bls.cpi.u.headline_mom.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent_growth",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -826,23 +950,20 @@
         "role": "cpi_u_all_items"
       },
       "sources": [
-        "bls",
-        "bls_cpi"
+        "bls"
       ],
       "aliases": [
-        "CPIAUCSL",
-        "bls.cpi.u.headline_mom.june_2026",
         "bls.cpi.u.headline_mom.may_2026"
       ],
       "rid_patterns": [
         "bls.cpi.u.headline_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "f6ef8b1d-b769-4e23-9fb6-e8c07df16c37",
+      "uuid": "13cb7ad3-eceb-4c76-964f-022171881849",
       "concept": "bls.cps.employed_people_by_occupation.business_financial_operations",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.business_financial_operations.{P}"
@@ -851,8 +972,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -874,7 +996,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "5d93431c-cfdc-45a2-b62e-8bbc9ce70f6d",
+      "uuid": "0284504d-9da8-44e2-b223-dfc2bac838a8",
       "concept": "bls.cps.employed_people_by_occupation.computer_mathematical",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.computer_mathematical.{P}"
@@ -883,8 +1005,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -906,7 +1029,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "27c44d4d-c9da-46b2-9e0c-17ef7397b53e",
+      "uuid": "d1c55677-6436-407b-9632-4d23389f9650",
       "concept": "bls.cps.employed_people_by_occupation.healthcare_support",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.healthcare_support.{P}"
@@ -915,8 +1038,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -938,7 +1062,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "cf7aed6d-c97d-45f0-823b-f8adcff63da0",
+      "uuid": "ec4f8edd-1a44-4f51-a74b-77aec571445e",
       "concept": "bls.cps.employed_people_by_occupation.office_administrative_support",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.office_administrative_support.{P}"
@@ -947,8 +1071,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -970,7 +1095,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "479d1718-942b-49b7-abae-e606cb088000",
+      "uuid": "ad9fb3ff-8e30-418b-837c-83b572fb526b",
       "concept": "bls.cps.employed_people_by_occupation.production",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.production.{P}"
@@ -979,8 +1104,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1002,7 +1128,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "5aa9a7fe-e5fb-4e53-9b74-629ea99985f0",
+      "uuid": "747b0c83-5c43-463d-8f1c-804726d7e92f",
       "concept": "bls.cps.employed_people_by_occupation.transportation_material_moving",
       "family_patterns": [
         "bls.cps.employed_people_by_occupation.transportation_material_moving.{P}"
@@ -1011,8 +1137,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1034,7 +1161,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "be1586b2-7c70-46a4-ad99-fc53800a8834",
+      "uuid": "fa85d459-e276-4aa7-a31e-c29c078ea8ef",
       "concept": "bls.cps.telework_share",
       "family_patterns": [
         "bls.cps.telework_share"
@@ -1052,7 +1179,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "81af2046-ee63-413d-b990-71b8717e2b8c",
+      "uuid": "1804da11-bfb6-4788-96ee-b966f0193e49",
       "concept": "bls.cps.u6_underemployment_rate",
       "family_patterns": [
         "bls.cps.u6_underemployment_rate"
@@ -1070,26 +1197,25 @@
       "observation_count": 0
     },
     {
-      "uuid": "bbf6d6b8-82c8-4ae5-9b07-ca493b7d717c",
+      "uuid": "d5277474-5aa3-43ec-8985-e5abe6cc4210",
       "concept": "bls.cps.unemployment_rate",
       "family_patterns": [
-        "bls.cps.unemployment_rate",
         "bls.cps.unemployment_rate.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
-        "name": "person",
-        "role": "civilian_labor_force"
+        "name": "economy",
+        "role": "aggregate"
       },
       "sources": [
-        "bls",
         "bls_cps"
       ],
       "aliases": [
@@ -1099,12 +1225,42 @@
       "rid_patterns": [
         "bls.cps.unemployment_rate.{P}.first_print"
       ],
-      "first_observed_period": "2026-05",
+      "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
-      "observation_count": 2
+      "observation_count": 1
     },
     {
-      "uuid": "3a7ced38-7a0b-476d-a15d-369bab07ae88",
+      "uuid": "efa1b3c9-4826-4179-8b79-92cda290d009",
+      "concept": "bls.cps.unemployment_rate",
+      "family_patterns": [
+        "bls.cps.unemployment_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "person",
+        "role": "civilian_labor_force"
+      },
+      "sources": [
+        "bls"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "bls.cps.unemployment_rate.{P}.first_print"
+      ],
+      "first_observed_period": "2026-05",
+      "last_observed_period": "2026-05",
+      "observation_count": 1
+    },
+    {
+      "uuid": "cbc7c2f1-ba6f-4fd3-937e-1e1501a4d77e",
       "concept": "bls.eci.private_wages_salaries_qoq",
       "family_patterns": [
         "bls.eci.private_wages_salaries_qoq.{P}"
@@ -1113,8 +1269,9 @@
       "unit": "percent_growth",
       "cadence": "quarter",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1136,7 +1293,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "15d5c333-c7aa-4f17-8c2c-75bc7e1a6c25",
+      "uuid": "b1369ea9-86d6-4af7-b8f0-50717149c38f",
       "concept": "bls.eci.total_compensation_private_industry_qoq",
       "family_patterns": [
         "bls.eci.total_compensation_private_industry_qoq.{P}"
@@ -1145,8 +1302,9 @@
       "unit": "percent_growth",
       "cadence": "quarter",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1168,7 +1326,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "a2243a6f-a8b0-4b78-8671-97dfdc715158",
+      "uuid": "2392247f-91ea-4ecc-8b65-11bc3f88e220",
       "concept": "bls.export_prices.all_commodities_mom",
       "family_patterns": [
         "bls.export_prices.all_commodities_mom"
@@ -1186,7 +1344,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "7d4a1345-dbbe-486d-9a5d-6ba17e2b38aa",
+      "uuid": "5622048a-7755-4f46-824d-160794cd2542",
       "concept": "bls.import_price_index.all_imports_mom",
       "family_patterns": [
         "bls.import_price_index.all_imports_mom.{P}"
@@ -1195,8 +1353,42 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "bls_import_export_prices"
+      ],
+      "aliases": [
+        "IR",
+        "bls.import_price_index.all_imports_mom.2026-06"
+      ],
+      "rid_patterns": [
+        "bls.import_price_index.all_imports_mom.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "b2b0a6cc-9a31-456a-a28d-9ef4fde19406",
+      "concept": "bls.import_price_index.all_imports_mom",
+      "family_patterns": [
+        "bls.import_price_index.all_imports_mom.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent_growth",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1204,24 +1396,21 @@
         "role": "all_imports"
       },
       "sources": [
-        "bls",
-        "bls_import_export_prices"
+        "bls"
       ],
       "aliases": [
-        "IR",
         "bls.import_price_index.all_imports",
-        "bls.import_price_index.all_imports_mom.2026-06",
         "bls.import_price_index.all_imports_mom.may_2026"
       ],
       "rid_patterns": [
         "bls.import_price_index.all_imports_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "ea88768a-c4e8-439c-ad74-2f0fffeec569",
+      "uuid": "bef0c281-ae00-4af2-8f92-54b23938f887",
       "concept": "bls.jolts.hires_rate",
       "family_patterns": [
         "bls.jolts.hires_rate"
@@ -1239,7 +1428,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "fd2da098-04e6-41bf-a921-35b8d62b1bd2",
+      "uuid": "75f43d09-f7bd-42f9-98dd-79a20ab8e994",
       "concept": "bls.jolts.job_openings",
       "family_patterns": [
         "bls.jolts.job_openings.{P}"
@@ -1248,8 +1437,9 @@
       "unit": "millions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1271,7 +1461,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "da0efb61-b35b-48fb-9304-d91b618f2098",
+      "uuid": "8c40edce-469c-4852-9564-e138932ce996",
       "concept": "bls.jolts.job_openings_total",
       "family_patterns": [
         "bls.jolts.job_openings_total.{P}"
@@ -1280,8 +1470,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1303,7 +1494,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "09f175c0-15cc-4300-a675-e2ec9fdeabc0",
+      "uuid": "ebc8ff13-5db1-4bfc-a921-58a7bfe748fa",
       "concept": "bls.jolts.quits_rate",
       "family_patterns": [
         "bls.jolts.quits_rate"
@@ -1321,7 +1512,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "6ffad760-05ec-4272-98f0-265c13d63a14",
+      "uuid": "41380405-1391-475e-86ce-edc5fbf1ecf1",
       "concept": "bls.lns11300000",
       "family_patterns": [
         "bls.lns11300000"
@@ -1339,7 +1530,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "511937f5-55fc-4518-8e08-76601bdd0f69",
+      "uuid": "ef49ff78-b4ed-440d-97fa-4631b59f9a15",
       "concept": "bls.ppi.final_demand_monthly_change",
       "family_patterns": [
         "bls.ppi.final_demand_monthly_change.{P}"
@@ -1348,8 +1539,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1370,7 +1562,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "58ed86d3-32a8-40ac-b6e9-3bc013810d22",
+      "uuid": "db5162f5-39d0-47a4-829d-f65fffd2b79a",
       "concept": "bls.productivity.nonfarm_qoq_prelim",
       "family_patterns": [
         "bls.productivity.nonfarm_qoq_prelim"
@@ -1388,7 +1580,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "9f801a0e-c87e-4b5f-979f-ca2838afc3d2",
+      "uuid": "14944fa7-9ceb-45c4-856d-a47d24cdcf08",
       "concept": "bls.productivity.nonfarm_unit_labor_costs_qoq_prelim",
       "family_patterns": [
         "bls.productivity.nonfarm_unit_labor_costs_qoq_prelim"
@@ -1406,7 +1598,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "0b2d9164-ddc3-436b-86ec-c508788622c9",
+      "uuid": "90bf8f8b-40b9-4b86-91b1-c64ecaf73bdb",
       "concept": "bls.real_earnings.avg_hourly_mom",
       "family_patterns": [
         "bls.real_earnings.avg_hourly_mom"
@@ -1424,48 +1616,18 @@
       "observation_count": 0
     },
     {
-      "uuid": "718d2c3c-710f-4606-a9c4-c33a50270066",
-      "concept": "boe.bank_rate.2026_06_18",
+      "uuid": "27b594ab-ad4d-470d-aa70-99f159f978e1",
+      "concept": "boe.bank_rate",
       "family_patterns": [
-        "boe.bank_rate.2026_06_18"
-      ],
-      "status": "observed",
-      "unit": "percent",
-      "cadence": "month",
-      "geography": {
-        "id": "GB",
-        "level": "country",
-        "name": "United Kingdom"
-      },
-      "entity": {
-        "name": "government",
-        "role": "bank_rate"
-      },
-      "sources": [
-        "boe"
-      ],
-      "aliases": [
-        "boe.bank_rate"
-      ],
-      "rid_patterns": [
         "boe.bank_rate.{P}"
       ],
-      "first_observed_period": "2026-06",
-      "last_observed_period": "2026-06",
-      "observation_count": 1
-    },
-    {
-      "uuid": "4daecbe3-afb1-4e97-9368-0e7d049d7cfa",
-      "concept": "boe.bank_rate.after_mpc_june_2026",
-      "family_patterns": [
-        "boe.bank_rate.after_mpc_june_2026"
-      ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -1476,27 +1638,30 @@
         "boe"
       ],
       "aliases": [
-        "boe.bank_rate"
+        "boe.bank_rate.2026_06_18",
+        "boe.bank_rate.after_mpc_june_2026"
       ],
       "rid_patterns": [
-        "boe.bank_rate.after_mpc_june_2026.first_print"
+        "boe.bank_rate.{P}",
+        "boe.bank_rate.{P}.first_print"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
-      "observation_count": 1
+      "observation_count": 2
     },
     {
-      "uuid": "e762229a-d846-4e3e-a5f2-ec4361a675b6",
-      "concept": "boj.policy_rate_guideline.after_june_2026",
+      "uuid": "a27769be-70a4-40ba-9c2b-afd2689468a5",
+      "concept": "boj.policy_rate_guideline",
       "family_patterns": [
-        "boj.policy_rate_guideline.after_june_2026"
+        "boj.policy_rate_guideline.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -1507,17 +1672,18 @@
         "boj"
       ],
       "aliases": [
-        "boj.guideline_uncollateralized_overnight_call_rate"
+        "boj.guideline_uncollateralized_overnight_call_rate",
+        "boj.policy_rate_guideline.after_june_2026"
       ],
       "rid_patterns": [
-        "boj.policy_rate_guideline.after_june_2026"
+        "boj.policy_rate_guideline.{P}"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "4b79edf3-c0c3-4e69-afb8-dc5ca9ddda28",
+      "uuid": "aa0f4904-a802-4a63-afac-d259f650abe5",
       "concept": "census.construction_spending.total_mom",
       "family_patterns": [
         "census.construction_spending.total_mom"
@@ -1535,7 +1701,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "0fb9aba6-6d7b-4c8e-8c94-9583717b20c0",
+      "uuid": "8bc25a3b-fc09-4545-a543-fa2ec8e2f824",
       "concept": "census.housing.completions_saar",
       "family_patterns": [
         "census.housing.completions_saar"
@@ -1553,7 +1719,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "8a7fe6b2-c0bc-4714-b363-44fb2260b08d",
+      "uuid": "d2bf0b63-8c7b-415a-8bfc-f971ad464899",
       "concept": "census.housing.permits_saar",
       "family_patterns": [
         "census.housing.permits_saar"
@@ -1571,7 +1737,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "e4766a52-8647-4e82-b9fa-de3cf3e82edb",
+      "uuid": "f8fae70e-07e5-455c-8e2c-b0cf15cd99d1",
       "concept": "census.housing_starts.saar",
       "family_patterns": [
         "census.housing_starts.saar.{P}"
@@ -1580,8 +1746,9 @@
       "unit": "millions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1589,100 +1756,97 @@
         "role": "housing_start"
       },
       "sources": [
-        "census",
-        "census_housing"
+        "census"
       ],
       "aliases": [
-        "HOUST",
-        "census.housing_starts.saar.2026-06",
         "census.housing_starts.saar.may_2026"
       ],
       "rid_patterns": [
         "census.housing_starts.saar.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "aa40d039-021c-456b-bd74-7cd9cca7f974",
+      "uuid": "e25e92f0-27d7-4de0-a096-bf745df47f0b",
+      "concept": "census.housing_starts.saar",
+      "family_patterns": [
+        "census.housing_starts.saar.{P}"
+      ],
+      "status": "observed",
+      "unit": "millions",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "census_housing"
+      ],
+      "aliases": [
+        "HOUST",
+        "census.housing_starts.saar.2026-06"
+      ],
+      "rid_patterns": [
+        "census.housing_starts.saar.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "3af7cdbd-2a38-4dca-8ff4-edadfa79de20",
       "concept": "census.m3.durable_goods_new_orders_mom",
       "family_patterns": [
-        "census.m3.durable_goods_new_orders_mom"
+        "census.m3.durable_goods_new_orders_mom.{P}"
       ],
-      "status": "docket-only",
+      "status": "observed",
       "unit": "percent_growth",
       "cadence": "month",
-      "geography": null,
-      "entity": null,
-      "sources": [],
-      "aliases": [],
-      "rid_patterns": [],
-      "first_observed_period": null,
-      "last_observed_period": null,
-      "observation_count": 0
-    },
-    {
-      "uuid": "23759735-fa48-4726-8f62-2a8e7ffcf818",
-      "concept": "census.m3.durable_goods_new_orders_mom.2026_06",
-      "family_patterns": [
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "census_m3"
+      ],
+      "aliases": [
+        "DGORDER",
         "census.m3.durable_goods_new_orders_mom.2026_06"
       ],
-      "status": "observed",
-      "unit": "percent_growth",
-      "cadence": "month",
-      "geography": {
-        "id": "0100000US",
-        "level": "country",
-        "name": "United States"
-      },
-      "entity": {
-        "name": "economy",
-        "role": "aggregate"
-      },
-      "sources": [
-        "census_m3"
-      ],
-      "aliases": [
-        "DGORDER"
-      ],
       "rid_patterns": [
-        "census.m3.durable_goods_new_orders_mom.2026_06.first_print"
+        "census.m3.durable_goods_new_orders_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "cd4bcf51-3810-4c14-a003-63160c6a68ae",
+      "uuid": "8112793f-5172-4cb5-83f1-afd909626624",
       "concept": "census.m3.durable_goods_shipments_mom",
       "family_patterns": [
-        "census.m3.durable_goods_shipments_mom"
-      ],
-      "status": "docket-only",
-      "unit": "percent_growth",
-      "cadence": "month",
-      "geography": null,
-      "entity": null,
-      "sources": [],
-      "aliases": [],
-      "rid_patterns": [],
-      "first_observed_period": null,
-      "last_observed_period": null,
-      "observation_count": 0
-    },
-    {
-      "uuid": "fe9a6f40-a6a8-47a9-837d-f9bf6b9ddf18",
-      "concept": "census.m3.durable_goods_shipments_mom.2026_06",
-      "family_patterns": [
-        "census.m3.durable_goods_shipments_mom.2026_06"
+        "census.m3.durable_goods_shipments_mom.{P}"
       ],
       "status": "observed",
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1693,17 +1857,18 @@
         "census_m3"
       ],
       "aliases": [
-        "AMDMVS"
+        "AMDMVS",
+        "census.m3.durable_goods_shipments_mom.2026_06"
       ],
       "rid_patterns": [
-        "census.m3.durable_goods_shipments_mom.2026_06.first_print"
+        "census.m3.durable_goods_shipments_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "cfc55af5-9d5e-41df-b743-abcdb6fefed0",
+      "uuid": "7c15316d-632c-40da-9c61-25b92a7531aa",
       "concept": "census.marts.adv44x72.monthly_change",
       "family_patterns": [
         "census.marts.adv44x72.{P}.monthly_change"
@@ -1712,8 +1877,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1735,7 +1901,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "6f893276-193d-4f05-b97e-06f148c7e8b7",
+      "uuid": "686e3197-53ec-4988-ba8f-23c2bb90a902",
       "concept": "census.mtis.total_business_inventories_level",
       "family_patterns": [
         "census.mtis.total_business_inventories_level.{P}"
@@ -1744,8 +1910,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1767,7 +1934,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "d068627e-4231-4112-99a2-585da493d712",
+      "uuid": "956247d0-69dd-4bde-859f-28b13905d719",
       "concept": "census.new_residential_sales.new_single_family_houses_sold_saar",
       "family_patterns": [
         "census.new_residential_sales.new_single_family_houses_sold_saar"
@@ -1785,7 +1952,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "64eecb42-6eaf-4d73-a0f4-2e780a381f25",
+      "uuid": "b69629ad-dd6a-4bfe-96b6-f92b99017d4d",
       "concept": "cms.care_compare.nursing_home_occupancy_pct",
       "family_patterns": [
         "cms.care_compare.nursing_home_occupancy_pct.{P}"
@@ -1794,8 +1961,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1817,7 +1985,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "06eaae11-5aa5-47e1-8d6d-281fa61014db",
+      "uuid": "24d9d68f-2ebc-44cf-b825-cb42f12d1103",
       "concept": "cms.medicaid_pi.beneficiaries_disenrolled_procedural",
       "family_patterns": [
         "cms.medicaid_pi.beneficiaries_disenrolled_procedural"
@@ -1826,8 +1994,9 @@
       "unit": "count",
       "cadence": "month",
       "geography": {
-        "id": "0400000US06",
         "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
         "name": "California"
       },
       "entity": {
@@ -1841,14 +2010,14 @@
         "Beneficiaries Disenrolled for Procedural Reasons at Renewal"
       ],
       "rid_patterns": [
-        "cms.medicaid_pi.beneficiaries_disenrolled_procedural.california.feb_2026.original_submission"
+        "cms.medicaid_pi.beneficiaries_disenrolled_procedural.california.{P}.original_submission"
       ],
       "first_observed_period": "2026-02",
       "last_observed_period": "2026-02",
       "observation_count": 1
     },
     {
-      "uuid": "3b0fe92c-cc24-4b5c-8254-d8e594a4f0b1",
+      "uuid": "10692e21-bd74-47a7-a730-817da7aaec02",
       "concept": "cms.medicaid_pi.beneficiaries_disenrolled_total",
       "family_patterns": [
         "cms.medicaid_pi.beneficiaries_disenrolled_total"
@@ -1857,8 +2026,9 @@
       "unit": "count",
       "cadence": "month",
       "geography": {
-        "id": "0400000US06",
         "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
         "name": "California"
       },
       "entity": {
@@ -1872,14 +2042,14 @@
         "Beneficiaries Disenrolled at Renewal (Total)"
       ],
       "rid_patterns": [
-        "cms.medicaid_pi.beneficiaries_disenrolled_total.california.feb_2026.original_submission"
+        "cms.medicaid_pi.beneficiaries_disenrolled_total.california.{P}.original_submission"
       ],
       "first_observed_period": "2026-02",
       "last_observed_period": "2026-02",
       "observation_count": 1
     },
     {
-      "uuid": "51cd0196-3b55-4fd3-a0f6-3b8df633ca5c",
+      "uuid": "24c9025c-770e-41b2-a701-6dd3fafa7822",
       "concept": "cms.medicaid_pi.beneficiaries_renewed_ex_parte",
       "family_patterns": [
         "cms.medicaid_pi.beneficiaries_renewed_ex_parte"
@@ -1888,8 +2058,9 @@
       "unit": "count",
       "cadence": "month",
       "geography": {
-        "id": "0400000US06",
         "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
         "name": "California"
       },
       "entity": {
@@ -1903,14 +2074,14 @@
         "Beneficiaries Whose Coverage Was Renewed on an Ex Parte Basis"
       ],
       "rid_patterns": [
-        "cms.medicaid_pi.beneficiaries_renewed_ex_parte.california.feb_2026.original_submission"
+        "cms.medicaid_pi.beneficiaries_renewed_ex_parte.california.{P}.original_submission"
       ],
       "first_observed_period": "2026-02",
       "last_observed_period": "2026-02",
       "observation_count": 1
     },
     {
-      "uuid": "b60b0791-ac85-48e7-9823-f50374906eff",
+      "uuid": "ffe51507-ce80-4750-825d-087aeb8797de",
       "concept": "cms.medicaid_pi.beneficiaries_renewed_total",
       "family_patterns": [
         "cms.medicaid_pi.beneficiaries_renewed_total"
@@ -1919,8 +2090,9 @@
       "unit": "count",
       "cadence": "month",
       "geography": {
-        "id": "0400000US06",
         "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
         "name": "California"
       },
       "entity": {
@@ -1934,14 +2106,14 @@
         "Beneficiaries Whose Coverage Was Renewed (Total)"
       ],
       "rid_patterns": [
-        "cms.medicaid_pi.beneficiaries_renewed_total.california.feb_2026.original_submission"
+        "cms.medicaid_pi.beneficiaries_renewed_total.california.{P}.original_submission"
       ],
       "first_observed_period": "2026-02",
       "last_observed_period": "2026-02",
       "observation_count": 1
     },
     {
-      "uuid": "d5cc5546-e4e9-4a65-a101-4cbbdeb836c6",
+      "uuid": "fbff6bd3-f4fc-42ae-b4d7-d39b9abf4f42",
       "concept": "cms.nursing_home_compare.reported_total_nurse_staffing_hprd_us",
       "family_patterns": [
         "cms.nursing_home_compare.reported_total_nurse_staffing_hprd_us.{P}"
@@ -1950,8 +2122,9 @@
       "unit": "ratio",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -1973,7 +2146,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "b19d6746-752e-4f4a-a61b-6692ce739e56",
+      "uuid": "34291f59-cfc7-40ed-bf55-ab923b184b9a",
       "concept": "dol.eta.continued_claims.sa",
       "family_patterns": [
         "dol.eta.continued_claims.sa"
@@ -1982,8 +2155,9 @@
       "unit": "millions",
       "cadence": "week_ending",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2004,17 +2178,18 @@
       "observation_count": 4
     },
     {
-      "uuid": "6c2ea998-62d0-4940-9c61-3025526f0f01",
-      "concept": "dol.eta.initial_claims.sa.week_ending_2026_06_06",
+      "uuid": "b77d7372-5127-4071-b927-e3f9452edc82",
+      "concept": "dol.eta.initial_claims.sa",
       "family_patterns": [
-        "dol.eta.initial_claims.sa.week_ending_2026_06_06"
+        "dol.eta.initial_claims.sa.{P}"
       ],
       "status": "observed",
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2024,26 +2199,29 @@
       "sources": [
         "dol"
       ],
-      "aliases": [],
-      "rid_patterns": [
+      "aliases": [
         "dol.eta.initial_claims.sa.week_ending_2026_06_06"
+      ],
+      "rid_patterns": [
+        "dol.eta.initial_claims.sa.{P}"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "a3b6da69-1b25-436f-b7d8-50402da8acd9",
-      "concept": "ecb.deposit_facility_rate.after_june_2026",
+      "uuid": "92d57201-4c72-4f51-90d5-d77a910662d0",
+      "concept": "ecb.deposit_facility_rate",
       "family_patterns": [
-        "ecb.deposit_facility_rate.after_june_2026"
+        "ecb.deposit_facility_rate.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "EA",
         "level": "country",
+        "id": "EA",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2053,26 +2231,29 @@
       "sources": [
         "ecb"
       ],
-      "aliases": [],
-      "rid_patterns": [
+      "aliases": [
         "ecb.deposit_facility_rate.after_june_2026"
+      ],
+      "rid_patterns": [
+        "ecb.deposit_facility_rate.{P}"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "5c60f36b-cff1-48ac-bea6-4d530a3a5b7b",
-      "concept": "estat.jp.cpi.core_exfreshfood.yoy.2026_05",
+      "uuid": "1b70b9e5-c422-4a91-ac1d-660012f09c12",
+      "concept": "estat.jp.cpi.core_exfreshfood.yoy",
       "family_patterns": [
-        "estat.jp.cpi.core_exfreshfood.yoy.2026_05"
+        "estat.jp.cpi.core_exfreshfood.yoy.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -2083,6 +2264,7 @@
         "statjp"
       ],
       "aliases": [
+        "estat.jp.cpi.core_exfreshfood.yoy.2026_05",
         "japan.cpi.all_items_less_fresh_food_yoy"
       ],
       "rid_patterns": [
@@ -2093,7 +2275,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "665e37f8-73b3-4c18-9b6d-c59287b8516a",
+      "uuid": "d69ffa04-6d46-4f4e-b9c9-da2c4e9bfbdd",
       "concept": "eurostat.ea.hicp.flash.yoy",
       "family_patterns": [
         "eurostat.ea.hicp.flash.yoy",
@@ -2103,8 +2285,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "EA21",
         "level": "region",
+        "id": "EA21",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2126,7 +2309,7 @@
       "observation_count": 2
     },
     {
-      "uuid": "93bcc0bf-88fb-43df-8ec5-e388a2bf41dd",
+      "uuid": "e6dd2d67-f47a-4014-b591-a8fdb55f6cc7",
       "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
       "family_patterns": [
         "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
@@ -2135,8 +2318,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "EA",
         "level": "region",
+        "id": "EA",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2147,20 +2331,50 @@
         "eurostat"
       ],
       "aliases": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.may_2026"
+      ],
+      "rid_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.final_first_print"
+      ],
+      "first_observed_period": "2026-05",
+      "last_observed_period": "2026-05",
+      "observation_count": 1
+    },
+    {
+      "uuid": "0a6b3f6e-c324-4eb1-9561-218ed26cb2bc",
+      "concept": "eurostat.hicp.all_items_annual_rate.euro_area",
+      "family_patterns": [
+        "eurostat.hicp.all_items_annual_rate.euro_area.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "month",
+      "geography": {
+        "level": "region",
+        "id": "EA21",
+        "vintage": "current",
+        "name": "Euro area"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "eurostat"
+      ],
+      "aliases": [
         "eurostat.hicp.all_items_annual_rate.euro_area.june_2026",
-        "eurostat.hicp.all_items_annual_rate.euro_area.may_2026",
         "prc_hicp_minr/M.RCH_A.TOTAL.EA21"
       ],
       "rid_patterns": [
-        "eurostat.hicp.all_items_annual_rate.euro_area.{P}.final_first_print",
         "eurostat.hicp.all_items_annual_rate.euro_area.{P}.flash"
       ],
-      "first_observed_period": "2026-05",
+      "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
-      "observation_count": 2
+      "observation_count": 1
     },
     {
-      "uuid": "575f6923-d16a-499a-9cf5-808ff49da510",
+      "uuid": "de81f2f8-dc4f-47ed-b94d-fea62024fc71",
       "concept": "eurostat.hicp.flash.yoy",
       "family_patterns": [
         "eurostat.hicp.flash.yoy"
@@ -2178,7 +2392,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "a75da4ba-3a7c-4b9e-92ee-9417d2d09947",
+      "uuid": "51bda8a2-7a5e-4643-87db-b66643485b8e",
       "concept": "eurostat.industrial_production.euro_area",
       "family_patterns": [
         "eurostat.industrial_production.euro_area.{P}"
@@ -2187,8 +2401,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "EA",
         "level": "region",
+        "id": "EA",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2209,7 +2424,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "c1cd6611-a941-4f6d-99e0-937b0cbe5923",
+      "uuid": "704fd1b0-0fa1-415f-868b-cf2c2f57178c",
       "concept": "eurostat.retail_trade.volume_mom.euro_area",
       "family_patterns": [
         "eurostat.retail_trade.volume_mom.euro_area.{P}"
@@ -2218,8 +2433,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "EA21",
         "level": "region",
+        "id": "EA21",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2241,7 +2457,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "f17d2b21-6462-4ffb-bb0d-0f9d9dfc1417",
+      "uuid": "72f86cdc-c980-4dcd-95ef-7970eae2658f",
       "concept": "eurostat.unemployment_rate",
       "family_patterns": [
         "eurostat.unemployment_rate"
@@ -2259,7 +2475,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "b52d84dc-c03a-4560-94ca-518486dbf83b",
+      "uuid": "14c8f455-9bb9-49aa-8ba2-83aaa7c42da8",
       "concept": "eurostat.unemployment_rate.belgium",
       "family_patterns": [
         "eurostat.unemployment_rate.belgium"
@@ -2267,7 +2483,11 @@
       "status": "docket-only",
       "unit": null,
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -2277,7 +2497,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "1950ae76-e1ba-4795-aafb-d8dafeddb9d6",
+      "uuid": "be52503e-8272-4f00-b0d7-77b97501cf8f",
       "concept": "eurostat.unemployment_rate.euro_area",
       "family_patterns": [
         "eurostat.unemployment_rate.euro_area.{P}"
@@ -2286,8 +2506,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "EA21",
         "level": "region",
+        "id": "EA21",
+        "vintage": "current",
         "name": "Euro area"
       },
       "entity": {
@@ -2309,7 +2530,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "adf2cf96-a222-4605-ad9f-e4d3a3f0a8bd",
+      "uuid": "08765b77-5015-4965-a990-6928f36d4994",
       "concept": "fed.g17.capacity_utilization.manufacturing",
       "family_patterns": [
         "fed.g17.capacity_utilization.manufacturing"
@@ -2327,7 +2548,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "0dde114c-ff49-4eef-a502-3f4f2c41ab22",
+      "uuid": "e535db92-cb5a-4767-8571-5d1c6fb507d3",
       "concept": "fed.g17.capacity_utilization.total_industry",
       "family_patterns": [
         "fed.g17.capacity_utilization.total_industry.{P}"
@@ -2336,8 +2557,42 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "federal_reserve_g17"
+      ],
+      "aliases": [
+        "TCU",
+        "fed.g17.capacity_utilization.total_industry.2026-06"
+      ],
+      "rid_patterns": [
+        "fed.g17.capacity_utilization.total_industry.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f7a68fda-aebc-4b59-99b8-5bd30054a265",
+      "concept": "fed.g17.capacity_utilization.total_industry",
+      "family_patterns": [
+        "fed.g17.capacity_utilization.total_industry.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2345,23 +2600,20 @@
         "role": "total_industry_capacity"
       },
       "sources": [
-        "fed",
-        "federal_reserve_g17"
+        "fed"
       ],
       "aliases": [
-        "TCU",
-        "fed.g17.capacity_utilization.total_industry.2026-06",
         "fed.g17.capacity_utilization.total_industry.may_2026"
       ],
       "rid_patterns": [
         "fed.g17.capacity_utilization.total_industry.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "9c1a0167-ae6d-4e37-86b3-b80829dbdd47",
+      "uuid": "84062e30-fb48-4ca2-8ade-d85a48f60116",
       "concept": "fed.g17.industrial_production.total_index_mom",
       "family_patterns": [
         "fed.g17.industrial_production.total_index_mom.{P}"
@@ -2370,8 +2622,42 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
+        "name": "United States"
+      },
+      "entity": {
+        "name": "economy",
+        "role": "aggregate"
+      },
+      "sources": [
+        "federal_reserve_g17"
+      ],
+      "aliases": [
+        "INDPRO",
+        "fed.g17.industrial_production.total_index_mom.2026-06"
+      ],
+      "rid_patterns": [
+        "fed.g17.industrial_production.total_index_mom.{P}.first_print"
+      ],
+      "first_observed_period": "2026-06",
+      "last_observed_period": "2026-06",
+      "observation_count": 1
+    },
+    {
+      "uuid": "9cd54337-5f6e-4235-ba3b-1b84ec98c1df",
+      "concept": "fed.g17.industrial_production.total_index_mom",
+      "family_patterns": [
+        "fed.g17.industrial_production.total_index_mom.{P}"
+      ],
+      "status": "observed",
+      "unit": "percent_growth",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2379,23 +2665,20 @@
         "role": "total_industrial_production"
       },
       "sources": [
-        "fed",
-        "federal_reserve_g17"
+        "fed"
       ],
       "aliases": [
-        "INDPRO",
-        "fed.g17.industrial_production.total_index_mom.2026-06",
         "fed.g17.industrial_production.total_index_mom.may_2026"
       ],
       "rid_patterns": [
         "fed.g17.industrial_production.total_index_mom.{P}.first_print"
       ],
       "first_observed_period": "2026-05",
-      "last_observed_period": "2026-06",
-      "observation_count": 2
+      "last_observed_period": "2026-05",
+      "observation_count": 1
     },
     {
-      "uuid": "baadb403-25a3-4701-a5e1-835b302e62b5",
+      "uuid": "9bea1d3b-1f9c-42d1-b260-dc01907d59a5",
       "concept": "fed.g17.manufacturing_production_mom",
       "family_patterns": [
         "fed.g17.manufacturing_production_mom"
@@ -2413,7 +2696,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "377d0771-4f1d-44f7-b4bd-33b73b376fcd",
+      "uuid": "57d9986e-d045-4a1e-a92e-1ef6663935cf",
       "concept": "fed.g19.consumer_credit_nonrevolving_annual_rate",
       "family_patterns": [
         "fed.g19.consumer_credit_nonrevolving_annual_rate"
@@ -2431,7 +2714,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "51bc97ca-1a1b-4e17-ac31-4fa260131484",
+      "uuid": "7bc4723e-f169-44e2-a5b5-e7f3d898ff65",
       "concept": "fed.g19.consumer_credit_revolving_annual_rate",
       "family_patterns": [
         "fed.g19.consumer_credit_revolving_annual_rate"
@@ -2449,7 +2732,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "32760935-b8c0-4442-a7c2-356fd154aa95",
+      "uuid": "ca1e40a0-25be-4e48-87c3-f7cad75d61cb",
       "concept": "fed.g19.consumer_credit_total_annual_rate",
       "family_patterns": [
         "fed.g19.consumer_credit_total_annual_rate"
@@ -2467,7 +2750,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "4f83c1d3-3f00-4477-9363-be0b04f2165e",
+      "uuid": "0a1fc3c0-f785-4de8-a11d-aa41a4723dd4",
       "concept": "fns.snap.application_processing_timeliness_rate",
       "family_patterns": [
         "fns.snap.application_processing_timeliness_rate"
@@ -2476,8 +2759,9 @@
       "unit": "percent",
       "cadence": "fiscal_year",
       "geography": {
-        "id": "0400000US06",
         "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
         "name": "California"
       },
       "entity": {
@@ -2496,7 +2780,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "f0935448-d5c3-403e-802f-bf7c92dd6c60",
+      "uuid": "842e02b6-e337-498a-92f0-b93846f1e3f8",
       "concept": "fns.snap.overpayment_error_rate",
       "family_patterns": [
         "fns.snap.overpayment_error_rate"
@@ -2505,8 +2789,9 @@
       "unit": "percent",
       "cadence": "fiscal_year",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2525,7 +2810,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "b89d6078-eb8e-4eb1-92e2-cc436e2093b1",
+      "uuid": "494823b3-1b77-47fb-b32a-ddfabc80823d",
       "concept": "fns.snap.share_jurisdictions_at_or_above_6pct",
       "family_patterns": [
         "fns.snap.share_jurisdictions_at_or_above_6pct"
@@ -2534,8 +2819,9 @@
       "unit": "percent",
       "cadence": "fiscal_year",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2556,7 +2842,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "38261880-d350-48fe-ab00-09580ed93dd2",
+      "uuid": "c585a927-4655-47a3-bde5-f84910a67b04",
       "concept": "fns.snap.total_payment_error_rate",
       "family_patterns": [
         "fns.snap.total_payment_error_rate"
@@ -2565,8 +2851,9 @@
       "unit": "percent",
       "cadence": "fiscal_year",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2578,68 +2865,1605 @@
       ],
       "aliases": [],
       "rid_patterns": [
-        "fns.snap.total_payment_error_rate.ak.{P}",
-        "fns.snap.total_payment_error_rate.al.{P}",
-        "fns.snap.total_payment_error_rate.ar.{P}",
-        "fns.snap.total_payment_error_rate.az.{P}",
-        "fns.snap.total_payment_error_rate.ca.{P}",
-        "fns.snap.total_payment_error_rate.co.{P}",
-        "fns.snap.total_payment_error_rate.ct.{P}",
-        "fns.snap.total_payment_error_rate.dc.{P}",
-        "fns.snap.total_payment_error_rate.de.{P}",
-        "fns.snap.total_payment_error_rate.fl.{P}",
-        "fns.snap.total_payment_error_rate.ga.{P}",
-        "fns.snap.total_payment_error_rate.gu.{P}",
-        "fns.snap.total_payment_error_rate.hi.{P}",
-        "fns.snap.total_payment_error_rate.ia.{P}",
-        "fns.snap.total_payment_error_rate.id.{P}",
-        "fns.snap.total_payment_error_rate.il.{P}",
-        "fns.snap.total_payment_error_rate.in.{P}",
-        "fns.snap.total_payment_error_rate.ks.{P}",
-        "fns.snap.total_payment_error_rate.ky.{P}",
-        "fns.snap.total_payment_error_rate.la.{P}",
-        "fns.snap.total_payment_error_rate.ma.{P}",
-        "fns.snap.total_payment_error_rate.md.{P}",
-        "fns.snap.total_payment_error_rate.me.{P}",
-        "fns.snap.total_payment_error_rate.mi.{P}",
-        "fns.snap.total_payment_error_rate.mn.{P}",
-        "fns.snap.total_payment_error_rate.mo.{P}",
-        "fns.snap.total_payment_error_rate.ms.{P}",
-        "fns.snap.total_payment_error_rate.mt.{P}",
-        "fns.snap.total_payment_error_rate.nc.{P}",
-        "fns.snap.total_payment_error_rate.nd.{P}",
-        "fns.snap.total_payment_error_rate.ne.{P}",
-        "fns.snap.total_payment_error_rate.nh.{P}",
-        "fns.snap.total_payment_error_rate.nj.{P}",
-        "fns.snap.total_payment_error_rate.nm.{P}",
-        "fns.snap.total_payment_error_rate.nv.{P}",
-        "fns.snap.total_payment_error_rate.ny.{P}",
-        "fns.snap.total_payment_error_rate.oh.{P}",
-        "fns.snap.total_payment_error_rate.ok.{P}",
-        "fns.snap.total_payment_error_rate.or.{P}",
-        "fns.snap.total_payment_error_rate.pa.{P}",
-        "fns.snap.total_payment_error_rate.ri.{P}",
-        "fns.snap.total_payment_error_rate.sc.{P}",
-        "fns.snap.total_payment_error_rate.sd.{P}",
-        "fns.snap.total_payment_error_rate.tn.{P}",
-        "fns.snap.total_payment_error_rate.tx.{P}",
         "fns.snap.total_payment_error_rate.us.{P}",
-        "fns.snap.total_payment_error_rate.us.{P}.official_release",
-        "fns.snap.total_payment_error_rate.ut.{P}",
-        "fns.snap.total_payment_error_rate.va.{P}",
-        "fns.snap.total_payment_error_rate.vi.{P}",
-        "fns.snap.total_payment_error_rate.vt.{P}",
-        "fns.snap.total_payment_error_rate.wa.{P}",
-        "fns.snap.total_payment_error_rate.wi.{P}",
-        "fns.snap.total_payment_error_rate.wv.{P}",
-        "fns.snap.total_payment_error_rate.wy.{P}"
+        "fns.snap.total_payment_error_rate.us.{P}.official_release"
       ],
       "first_observed_period": "2024",
       "last_observed_period": "2025",
-      "observation_count": 55
+      "observation_count": 2
     },
     {
-      "uuid": "2a8cd82e-c6a6-4374-b53f-361c8d912ad5",
+      "uuid": "ddb40496-e5be-45d0-96fc-554d5f8a34a3",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US01",
+        "vintage": "current",
+        "name": "Alabama"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.al.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "02726f8d-c850-4246-b4fa-097f875f373f",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US02",
+        "vintage": "current",
+        "name": "Alaska"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ak.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "260f07f5-f86e-4c9f-b1b1-3e8c1eee0541",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US04",
+        "vintage": "current",
+        "name": "Arizona"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.az.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "0427fc19-e6a4-4aae-838a-92b97a98372f",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US05",
+        "vintage": "current",
+        "name": "Arkansas"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ar.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "0e7e38c9-86e8-46f0-94dd-96306f6d7493",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US06",
+        "vintage": "current",
+        "name": "California"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ca.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "6f729ed5-8c47-47e5-8665-296491ac9860",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US08",
+        "vintage": "current",
+        "name": "Colorado"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.co.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "2270ead6-e4ca-4562-9401-7e2a90fb12c7",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US09",
+        "vintage": "current",
+        "name": "Connecticut"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ct.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e15826d8-2e05-4e31-ad4b-0dafd26378eb",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US10",
+        "vintage": "current",
+        "name": "Delaware"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.de.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "2783a60d-fa4d-4790-8d33-8c9e8d8cc90f",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US11",
+        "vintage": "current",
+        "name": "District of Columbia"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.dc.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f0a1bac8-592d-4c9b-ac1f-fe9c1625f025",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US12",
+        "vintage": "current",
+        "name": "Florida"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.fl.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "0eebf0eb-0a9e-4807-8eba-db432a0f7c53",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US13",
+        "vintage": "current",
+        "name": "Georgia"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ga.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "519c4f40-16e7-4a05-8264-98ed96cfb991",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US15",
+        "vintage": "current",
+        "name": "Hawaii"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.hi.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "06abba46-1ae9-4f1d-a2ff-d44eace85eee",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US16",
+        "vintage": "current",
+        "name": "Idaho"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.id.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "8f5321ad-8b7f-47e5-8f3e-910bbaf8f893",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US17",
+        "vintage": "current",
+        "name": "Illinois"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.il.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "205d818e-5803-46e7-bd76-f46fb579dbd2",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US18",
+        "vintage": "current",
+        "name": "Indiana"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.in.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "5d57bcc2-286e-4545-bbbd-9c8c04fde6ae",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US19",
+        "vintage": "current",
+        "name": "Iowa"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ia.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "9db5f35a-070a-4a98-b180-978663367e75",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US20",
+        "vintage": "current",
+        "name": "Kansas"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ks.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "9fdbde0b-db7f-4405-ae40-2a14108b8e88",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US21",
+        "vintage": "current",
+        "name": "Kentucky"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ky.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "3316dfa0-edd9-4f5f-921b-bbf7cec86b3e",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US22",
+        "vintage": "current",
+        "name": "Louisiana"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.la.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "8cec1cee-8967-4833-9f92-6fe8320e186c",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US23",
+        "vintage": "current",
+        "name": "Maine"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.me.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e4975798-4e8e-40f9-a00b-2aaf34bb9094",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US24",
+        "vintage": "current",
+        "name": "Maryland"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.md.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "5cb38459-b88c-4108-9eec-38cbc1f08abe",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US25",
+        "vintage": "current",
+        "name": "Massachusetts"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ma.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "c34d47f1-1f5d-4fea-a5e4-6fe6b73d3aaa",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US26",
+        "vintage": "current",
+        "name": "Michigan"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.mi.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e867140c-7a90-434b-916c-45dbed98b58f",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US27",
+        "vintage": "current",
+        "name": "Minnesota"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.mn.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "406d950c-02d9-4290-b048-bd77e08b2d4d",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US28",
+        "vintage": "current",
+        "name": "Mississippi"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ms.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "2aaa7a6d-2a07-439c-be44-bc84c9cc94f0",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US29",
+        "vintage": "current",
+        "name": "Missouri"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.mo.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f6136a80-22a1-4ea9-94b7-d5f845818da9",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US30",
+        "vintage": "current",
+        "name": "Montana"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.mt.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e281c4d7-10f4-48c7-9ad4-8cbe6ac083df",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US31",
+        "vintage": "current",
+        "name": "Nebraska"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ne.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "c7dd3197-99d8-48e0-a40c-e5a1fad5d6e7",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US32",
+        "vintage": "current",
+        "name": "Nevada"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nv.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "167dc6a7-13d2-4a30-a374-d201bd27eeda",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US33",
+        "vintage": "current",
+        "name": "New Hampshire"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nh.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "1e8abd87-aa84-4b07-ab72-2e3ca543df47",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US34",
+        "vintage": "current",
+        "name": "New Jersey"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nj.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "6288100f-0dc0-486d-8c47-a5f59422468d",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US35",
+        "vintage": "current",
+        "name": "New Mexico"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nm.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "8466fe18-e7f0-4649-9fb6-fbe5c679b330",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US36",
+        "vintage": "current",
+        "name": "New York"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ny.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f2464c58-e3df-4c6d-bd8d-2224397e71e1",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US37",
+        "vintage": "current",
+        "name": "North Carolina"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nc.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "0cfce5bb-e258-4461-941b-1bd22b702a7a",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US38",
+        "vintage": "current",
+        "name": "North Dakota"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.nd.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "653fc709-1048-41aa-92f9-478af77a7c37",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US39",
+        "vintage": "current",
+        "name": "Ohio"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.oh.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "b7b9352f-2ec2-442b-8cdf-91d4bee18834",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US40",
+        "vintage": "current",
+        "name": "Oklahoma"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ok.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "36bf955e-147b-4a45-9a05-013ea643a982",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US41",
+        "vintage": "current",
+        "name": "Oregon"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.or.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "2d590ffd-f6cc-4ded-a836-66e51c06846a",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US42",
+        "vintage": "current",
+        "name": "Pennsylvania"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.pa.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "93cd55b3-4ac4-40a5-a894-2414b57d0b63",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US44",
+        "vintage": "current",
+        "name": "Rhode Island"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ri.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "dd1b0426-a9a7-4947-8ccb-d725d5f705af",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US45",
+        "vintage": "current",
+        "name": "South Carolina"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.sc.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "88f0affd-b9e9-4e25-a5a1-75c8231e1851",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US46",
+        "vintage": "current",
+        "name": "South Dakota"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.sd.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e64ace78-5211-42c7-b398-febe15bd72a9",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US47",
+        "vintage": "current",
+        "name": "Tennessee"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.tn.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "883bf5c9-2f23-46d7-ad2f-1735bb07da20",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US48",
+        "vintage": "current",
+        "name": "Texas"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.tx.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "70bd86dd-db63-43b9-bd4d-d3897c323fe4",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US49",
+        "vintage": "current",
+        "name": "Utah"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.ut.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "b5b9c3d2-e8d5-4217-9f1d-b10b583cd296",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US50",
+        "vintage": "current",
+        "name": "Vermont"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.vt.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "de6c7aca-f3fd-4ff3-953f-da914f079995",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US51",
+        "vintage": "current",
+        "name": "Virginia"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.va.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "1ee101ec-a6ce-4a5d-85f2-bd0cf3799333",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US53",
+        "vintage": "current",
+        "name": "Washington"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.wa.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "f0303e9e-dfcb-4d55-95fa-0db98a6e8dab",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US54",
+        "vintage": "current",
+        "name": "West Virginia"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.wv.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "8105b4c6-62ba-469a-bdd7-5478df1c8984",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US55",
+        "vintage": "current",
+        "name": "Wisconsin"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.wi.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "04540192-c9e8-45ff-bf3b-bd2038e41635",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US56",
+        "vintage": "current",
+        "name": "Wyoming"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.wy.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "10797cc6-e647-4cae-a16f-168869ac91cd",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US66",
+        "vintage": "current",
+        "name": "Guam"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.gu.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "a7bf6571-716a-4d8f-8f3b-070bd4a1b975",
+      "concept": "fns.snap.total_payment_error_rate",
+      "family_patterns": [
+        "fns.snap.total_payment_error_rate"
+      ],
+      "status": "observed",
+      "unit": "percent",
+      "cadence": "fiscal_year",
+      "geography": {
+        "level": "state",
+        "id": "0400000US78",
+        "vintage": "current",
+        "name": "Virgin Islands"
+      },
+      "entity": {
+        "name": "household",
+        "role": "snap_participant"
+      },
+      "sources": [
+        "fns"
+      ],
+      "aliases": [],
+      "rid_patterns": [
+        "fns.snap.total_payment_error_rate.vi.{P}"
+      ],
+      "first_observed_period": "2025",
+      "last_observed_period": "2025",
+      "observation_count": 1
+    },
+    {
+      "uuid": "e07881a2-39b4-416f-8cd9-c503b1fdad4a",
       "concept": "fns.snap.total_persons",
       "family_patterns": [
         "fns.snap.total_persons"
@@ -2657,7 +4481,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "d39d61fc-dfdc-4ac2-825e-fc2fae47206c",
+      "uuid": "d4710c2c-cdb9-49ff-aa96-3bfb53429dbb",
       "concept": "fns.snap.underpayment_error_rate",
       "family_patterns": [
         "fns.snap.underpayment_error_rate"
@@ -2666,8 +4490,9 @@
       "unit": "percent",
       "cadence": "fiscal_year",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -2686,7 +4511,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "230d55c0-c136-4cea-870e-df157e7dd8a5",
+      "uuid": "37d08842-a1c9-40f3-b8dd-8fe010906a9d",
       "concept": "fns.wic.total_participation",
       "family_patterns": [
         "fns.wic.total_participation"
@@ -2704,7 +4529,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "cb766816-11af-41c0-ade0-44b8b80070c3",
+      "uuid": "10b01c7f-95e4-498d-a832-486ed61b1c51",
       "concept": "nbb.business_barometer.overall",
       "family_patterns": [
         "nbb.business_barometer.overall"
@@ -2712,7 +4537,11 @@
       "status": "docket-only",
       "unit": "index_points",
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -2722,7 +4551,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "cc753c6f-3189-40bc-ac91-a3fc030bca77",
+      "uuid": "5e7f88da-8f50-4e0e-9b7b-913da0b9d53e",
       "concept": "nbb.consumer_confidence.indicator",
       "family_patterns": [
         "nbb.consumer_confidence.indicator"
@@ -2730,7 +4559,11 @@
       "status": "docket-only",
       "unit": "index_points",
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -2740,7 +4573,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "d323b820-4286-4af8-abde-ffc23a6a5cf0",
+      "uuid": "bd245ca4-e8b7-45e5-b998-72601a3d75fb",
       "concept": "nbb.gdp.flash_qoq",
       "family_patterns": [
         "nbb.gdp.flash_qoq"
@@ -2748,7 +4581,11 @@
       "status": "docket-only",
       "unit": null,
       "cadence": "quarter",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -2758,7 +4595,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "5e675e85-d2c9-4752-ac42-12ffd7f2ab19",
+      "uuid": "9dc148f2-844f-438f-94a6-1ad7197c9fa1",
       "concept": "ons.cpi.annual_rate",
       "family_patterns": [
         "ons.cpi.annual_rate.{P}"
@@ -2767,8 +4604,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2789,17 +4627,18 @@
       "observation_count": 1
     },
     {
-      "uuid": "03049148-7355-45b8-b84f-ea5e2ed68132",
-      "concept": "ons.cpih.annual_rate.2026_05",
+      "uuid": "bb244193-568a-465b-ae0b-bdae1fb23ae8",
+      "concept": "ons.cpih.annual_rate",
       "family_patterns": [
-        "ons.cpih.annual_rate.2026_05"
+        "ons.cpih.annual_rate.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2810,7 +4649,7 @@
         "ons"
       ],
       "aliases": [
-        "ons.cpih.annual_rate"
+        "ons.cpih.annual_rate.2026_05"
       ],
       "rid_patterns": [
         "ons.cpih.annual_rate.{P}"
@@ -2820,7 +4659,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "f555c66e-3046-4937-868c-b177fb90349c",
+      "uuid": "0ccc9fc8-6ad9-44d6-a406-a13c0c6b779e",
       "concept": "ons.gdp.monthly_growth",
       "family_patterns": [
         "ons.gdp.monthly_growth.{P}"
@@ -2829,8 +4668,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2851,7 +4691,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "a52fff34-0ed5-484f-8f9d-351bf58fdc28",
+      "uuid": "5394d93b-56a4-47fd-89e3-d0706df4ee7e",
       "concept": "ons.hmrc.paye_payrolled_employees",
       "family_patterns": [
         "ons.hmrc.paye_payrolled_employees.{P}"
@@ -2860,8 +4700,9 @@
       "unit": "millions",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2882,17 +4723,18 @@
       "observation_count": 1
     },
     {
-      "uuid": "1c721376-4909-4a00-8720-20cfc7a974e0",
-      "concept": "ons.labour.unemployment_rate.february_to_april_2026",
+      "uuid": "e58098cf-6320-4028-9b00-9fdfb4a8f9dc",
+      "concept": "ons.labour.unemployment_rate",
       "family_patterns": [
-        "ons.labour.unemployment_rate.february_to_april_2026"
+        "ons.labour.unemployment_rate.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2903,17 +4745,17 @@
         "ons"
       ],
       "aliases": [
-        "ons.labour.unemployment_rate"
+        "ons.labour.unemployment_rate.february_to_april_2026"
       ],
       "rid_patterns": [
-        "ons.labour.unemployment_rate.february_to_april_2026.first_print"
+        "ons.labour.unemployment_rate.{P}.first_print"
       ],
       "first_observed_period": "2026-04",
       "last_observed_period": "2026-04",
       "observation_count": 1
     },
     {
-      "uuid": "5be5655b-d8c5-487b-80fa-56398c1a340b",
+      "uuid": "7c35b6d4-a697-40d8-9c66-b8809728b54d",
       "concept": "ons.pusf.j5ii.public_sector_net_borrowing_ex_banks",
       "family_patterns": [
         "ons.pusf.j5ii.public_sector_net_borrowing_ex_banks.{P}"
@@ -2922,8 +4764,9 @@
       "unit": "gbp_billions",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "United Kingdom"
       },
       "entity": {
@@ -2945,7 +4788,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "56f25283-15e0-401e-9702-fab516d563bc",
+      "uuid": "27924b23-60c0-4a61-aadc-8a2a2889b4ec",
       "concept": "ons.retail_sales.volume_mom",
       "family_patterns": [
         "ons.retail_sales.volume_mom.{P}"
@@ -2954,8 +4797,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "GB",
         "level": "country",
+        "id": "GB",
+        "vintage": "current",
         "name": "Great Britain"
       },
       "entity": {
@@ -2976,17 +4820,18 @@
       "observation_count": 1
     },
     {
-      "uuid": "8ef3fb76-ccf9-44cc-b893-45cc3789a2e5",
-      "concept": "rba.cash_rate_target.after_june_2026",
+      "uuid": "b0ba0014-50a8-46b0-9549-d51d03a281d3",
+      "concept": "rba.cash_rate_target",
       "family_patterns": [
-        "rba.cash_rate_target.after_june_2026"
+        "rba.cash_rate_target.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "AU",
         "level": "country",
+        "id": "AU",
+        "vintage": "current",
         "name": "Australia"
       },
       "entity": {
@@ -2997,17 +4842,17 @@
         "rba"
       ],
       "aliases": [
-        "rba.cash_rate_target"
+        "rba.cash_rate_target.after_june_2026"
       ],
       "rid_patterns": [
-        "rba.cash_rate_target.after_june_2026"
+        "rba.cash_rate_target.{P}"
       ],
       "first_observed_period": "2026-06",
       "last_observed_period": "2026-06",
       "observation_count": 1
     },
     {
-      "uuid": "1a66b6f4-2a13-4e1b-a69c-5720e3e48cd9",
+      "uuid": "b311da3b-4e74-4c77-955c-b40673658591",
       "concept": "ssa.ssi.total_recipients",
       "family_patterns": [
         "ssa.ssi.total_recipients"
@@ -3025,7 +4870,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "65865379-9dcd-426f-bd52-537563d618b4",
+      "uuid": "9069a65e-39d1-4735-99f3-553e6e90be7a",
       "concept": "statbel.cpi.headline_yoy",
       "family_patterns": [
         "statbel.cpi.headline_yoy"
@@ -3033,7 +4878,11 @@
       "status": "docket-only",
       "unit": null,
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -3043,7 +4892,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "ed77763d-9352-4f7c-bc54-2d85f12a436d",
+      "uuid": "4744d1f0-7fe3-4dcc-8b93-e8b46af4a0f7",
       "concept": "statbel.health_index.yoy",
       "family_patterns": [
         "statbel.health_index.yoy"
@@ -3051,7 +4900,11 @@
       "status": "docket-only",
       "unit": null,
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "BE",
+        "name": null
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
@@ -3061,7 +4914,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "611888ac-a911-4ba8-963d-5b06f8978970",
+      "uuid": "f1330368-0ba5-4649-94a3-50400bd50154",
       "concept": "statcan.36-10-0434-01.all_industries.month_to_month_percent_change",
       "family_patterns": [
         "statcan.36-10-0434-01.all_industries.month_to_month_percent_change"
@@ -3070,8 +4923,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3092,7 +4946,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "56932066-fd94-4d42-b8e7-06dbdd798031",
+      "uuid": "72f752bb-57a5-4556-875c-a6c14db3d0fa",
       "concept": "statcan.building_permits.total_value_mom.canada",
       "family_patterns": [
         "statcan.building_permits.total_value_mom.canada.{P}"
@@ -3101,8 +4955,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3123,7 +4978,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "79e69ae4-7585-47b5-a119-1bef1fe8fa5a",
+      "uuid": "1cc75c76-34d2-47d6-ac69-db9a5e75b16f",
       "concept": "statcan.cpi.all_items_annual_rate.canada",
       "family_patterns": [
         "statcan.cpi.all_items_annual_rate.canada.{P}"
@@ -3132,8 +4987,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3155,7 +5011,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "9ef07249-8a6a-48c1-9a93-6a0170f4b2d9",
+      "uuid": "182061a6-d331-4649-83c8-a4252139247f",
       "concept": "statcan.cpi.allitems.yoy",
       "family_patterns": [
         "statcan.cpi.allitems.yoy.{P}"
@@ -3164,8 +5020,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3187,7 +5044,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "bbe90a65-3a7e-4a55-b53f-a4bd026a71bb",
+      "uuid": "8fc52914-0d14-4d2f-a74b-5f5edfd9aeee",
       "concept": "statcan.employment_insurance.regular_beneficiaries.canada",
       "family_patterns": [
         "statcan.employment_insurance.regular_beneficiaries.canada.{P}"
@@ -3196,8 +5053,42 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
+        "name": "Canada"
+      },
+      "entity": {
+        "name": "person",
+        "role": "ei_beneficiary"
+      },
+      "sources": [
+        "statcan"
+      ],
+      "aliases": [
+        "statcan.employment_insurance.regular_beneficiaries.canada.may_2026",
+        "v64549350"
+      ],
+      "rid_patterns": [
+        "statcan.employment_insurance.regular_beneficiaries.canada.{P}.first_print"
+      ],
+      "first_observed_period": "2026-05",
+      "last_observed_period": "2026-05",
+      "observation_count": 1
+    },
+    {
+      "uuid": "aaf2c099-57ef-4978-a0c1-5a3d93a355cf",
+      "concept": "statcan.employment_insurance.regular_beneficiaries.canada",
+      "family_patterns": [
+        "statcan.employment_insurance.regular_beneficiaries.canada.{P}"
+      ],
+      "status": "observed",
+      "unit": "thousands",
+      "cadence": "month",
+      "geography": {
+        "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3209,19 +5100,17 @@
       ],
       "aliases": [
         "statcan.employment_insurance.regular_beneficiaries",
-        "statcan.employment_insurance.regular_beneficiaries.canada.april_2026",
-        "statcan.employment_insurance.regular_beneficiaries.canada.may_2026",
-        "v64549350"
+        "statcan.employment_insurance.regular_beneficiaries.canada.april_2026"
       ],
       "rid_patterns": [
         "statcan.employment_insurance.regular_beneficiaries.canada.{P}.first_print"
       ],
       "first_observed_period": "2026-04",
-      "last_observed_period": "2026-05",
-      "observation_count": 2
+      "last_observed_period": "2026-04",
+      "observation_count": 1
     },
     {
-      "uuid": "79d82a2e-0005-413e-a27f-68a892cb9c92",
+      "uuid": "37a2108c-fc20-4773-8955-1fa673d4ea39",
       "concept": "statcan.gdp_by_industry.monthly_growth",
       "family_patterns": [
         "statcan.gdp_by_industry.monthly_growth.{P}"
@@ -3230,8 +5119,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3253,7 +5143,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "b54ca57d-6487-4449-8004-7654676c6d8c",
+      "uuid": "eefd1b57-4894-4b89-a207-854dd60f3a27",
       "concept": "statcan.lfs.employment_change",
       "family_patterns": [
         "statcan.lfs.employment_change"
@@ -3262,8 +5152,9 @@
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3282,7 +5173,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "b6a06cd2-6961-442e-9549-e418a73ee8fb",
+      "uuid": "9c699030-1f40-4bd3-baca-b84a13ebf54e",
       "concept": "statcan.lfs.unemployment_rate",
       "family_patterns": [
         "statcan.lfs.unemployment_rate"
@@ -3291,8 +5182,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3311,7 +5203,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "1bc3ad4b-a496-49be-a37f-2ecc68aa7f9e",
+      "uuid": "1404f983-f6b2-4f65-aa64-cfcbe00f3718",
       "concept": "statcan.retail_trade.sales_mom.canada",
       "family_patterns": [
         "statcan.retail_trade.sales_mom.canada.{P}"
@@ -3320,8 +5212,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3343,7 +5236,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "500d4013-11d3-4953-a655-f66a0a8e6c2e",
+      "uuid": "0c1046ce-6fd7-420b-93e2-77b9800ff91a",
       "concept": "statcan.wholesale_trade.sales_mom_exclusions.canada",
       "family_patterns": [
         "statcan.wholesale_trade.sales_mom_exclusions.canada.{P}"
@@ -3352,8 +5245,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "CA",
         "level": "country",
+        "id": "CA",
+        "vintage": "current",
         "name": "Canada"
       },
       "entity": {
@@ -3375,7 +5269,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "fe21f760-19bc-442d-8096-9ad6fd519da8",
+      "uuid": "ed14fae9-fe4c-4f4c-bd85-c4df6df4b05f",
       "concept": "statjp.cpi.all_items_annual_rate.japan",
       "family_patterns": [
         "statjp.cpi.all_items_annual_rate.japan.{P}"
@@ -3384,8 +5278,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -3407,7 +5302,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "82e6ff19-58d9-47de-8c9a-290d216b55d6",
+      "uuid": "fa8946a8-e52a-4a62-a75f-9facf4117d84",
       "concept": "statjp.cpi.tokyo_all_items_annual_rate",
       "family_patterns": [
         "statjp.cpi.tokyo_all_items_annual_rate.{P}"
@@ -3416,8 +5311,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -3439,7 +5335,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "3fdadece-0a8d-47ef-82e2-5fdd6c1635a3",
+      "uuid": "e2312b47-b581-445c-867c-71bd50123492",
       "concept": "statjp.cpi.tokyo_all_items_yoy",
       "family_patterns": [
         "statjp.cpi.tokyo_all_items_yoy"
@@ -3457,7 +5353,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "819db852-efc0-4328-b6f9-921812037422",
+      "uuid": "ec446a59-3ea0-4dc1-804b-b6a40506d6fa",
       "concept": "statjp.household_spending.real_yoy.two_or_more_person_households",
       "family_patterns": [
         "statjp.household_spending.real_yoy.two_or_more_person_households.{P}"
@@ -3466,8 +5362,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -3489,7 +5386,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "872a5b54-68b8-43ac-ae8e-2ed34d1d6248",
+      "uuid": "09e40854-6b14-4128-9c54-719192ba9eae",
       "concept": "statjp.lfs.unemployment_rate.japan",
       "family_patterns": [
         "statjp.lfs.unemployment_rate.japan.{P}"
@@ -3498,8 +5395,9 @@
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "JP",
         "level": "country",
+        "id": "JP",
+        "vintage": "current",
         "name": "Japan"
       },
       "entity": {
@@ -3521,7 +5419,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "889ffc28-5927-45d6-b1bd-042cea0eebd9",
+      "uuid": "dc7d23ca-63ab-40f1-affa-213cf3880dde",
       "concept": "treasury.mts.monthly_deficit",
       "family_patterns": [
         "treasury.mts.monthly_deficit.{P}"
@@ -3530,8 +5428,9 @@
       "unit": "usd_billions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3552,7 +5451,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "eef582df-ebc4-458d-bcb2-c577eec6f486",
+      "uuid": "d37c0017-e5d6-4b7e-afc6-3cc3322bec38",
       "concept": "us.bea.core_pce.mom_sa",
       "family_patterns": [
         "us.bea.core_pce.mom_sa.{P}"
@@ -3561,8 +5460,9 @@
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3585,17 +5485,18 @@
       "observation_count": 2
     },
     {
-      "uuid": "9d57de07-64b7-466b-94db-fb5be3b6ad8b",
-      "concept": "us.census.housing_starts.total_saar.2026_05",
+      "uuid": "d085b526-5557-422f-b623-296d7152cbe0",
+      "concept": "us.census.housing_starts.total_saar",
       "family_patterns": [
-        "us.census.housing_starts.total_saar.2026_05"
+        "us.census.housing_starts.total_saar.{P}"
       ],
       "status": "observed",
       "unit": "millions",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3606,7 +5507,8 @@
         "census"
       ],
       "aliases": [
-        "census.housing_starts.saar"
+        "census.housing_starts.saar",
+        "us.census.housing_starts.total_saar.2026_05"
       ],
       "rid_patterns": [
         "us.census.housing_starts.total_saar.{P}"
@@ -3616,7 +5518,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "20531c77-574e-4a75-b088-efd30e8348de",
+      "uuid": "cf51edfa-cbc0-4d2d-ade1-32a1240da80f",
       "concept": "us.dol.initial_claims.sa",
       "family_patterns": [
         "us.dol.initial_claims.sa"
@@ -3625,8 +5527,9 @@
       "unit": "thousands",
       "cadence": "week_ending",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3647,17 +5550,18 @@
       "observation_count": 5
     },
     {
-      "uuid": "ac51922e-1cd3-492e-a3bf-f1d9abe3086b",
-      "concept": "us.dol.initial_claims.sa.week_2026_06_13",
+      "uuid": "1b5eec21-e424-44fe-a922-d99929901585",
+      "concept": "us.dol.initial_claims.sa",
       "family_patterns": [
-        "us.dol.initial_claims.sa.week_2026_06_13"
+        "us.dol.initial_claims.sa.{P}"
       ],
       "status": "observed",
       "unit": "thousands",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3668,7 +5572,8 @@
         "dol"
       ],
       "aliases": [
-        "dol.eta.initial_claims.sa"
+        "dol.eta.initial_claims.sa",
+        "us.dol.initial_claims.sa.week_2026_06_13"
       ],
       "rid_patterns": [
         "us.dol.initial_claims.sa.{P}"
@@ -3678,17 +5583,18 @@
       "observation_count": 1
     },
     {
-      "uuid": "4adf85b7-5252-4241-811f-c6f29c8b2521",
-      "concept": "us.fed.fomc.target_range_upper.2026_06",
+      "uuid": "5b0068e3-675a-4c77-90a7-1bcfdc69f11d",
+      "concept": "us.fed.fomc.target_range_upper",
       "family_patterns": [
-        "us.fed.fomc.target_range_upper.2026_06"
+        "us.fed.fomc.target_range_upper.{P}"
       ],
       "status": "observed",
       "unit": "percent",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3699,7 +5605,8 @@
         "fed"
       ],
       "aliases": [
-        "fomc.federal_funds_target_range_upper"
+        "fomc.federal_funds_target_range_upper",
+        "us.fed.fomc.target_range_upper.2026_06"
       ],
       "rid_patterns": [
         "us.fed.fomc.target_range_upper.{P}"
@@ -3709,17 +5616,18 @@
       "observation_count": 1
     },
     {
-      "uuid": "4d47758b-a8f8-4dde-a2ef-b27b579c4b00",
-      "concept": "us.frb.industrial_production.total.mom_sa.2026_05",
+      "uuid": "f7b45e6f-5085-4bb0-9645-cf0f915f0cae",
+      "concept": "us.frb.industrial_production.total.mom_sa",
       "family_patterns": [
-        "us.frb.industrial_production.total.mom_sa.2026_05"
+        "us.frb.industrial_production.total.mom_sa.{P}"
       ],
       "status": "observed",
       "unit": "percent_growth",
       "cadence": "month",
       "geography": {
-        "id": "0100000US",
         "level": "country",
+        "id": "0100000US",
+        "vintage": "current",
         "name": "United States"
       },
       "entity": {
@@ -3730,7 +5638,8 @@
         "fed"
       ],
       "aliases": [
-        "fed.g17.industrial_production.total_index_mom"
+        "fed.g17.industrial_production.total_index_mom",
+        "us.frb.industrial_production.total.mom_sa.2026_05"
       ],
       "rid_patterns": [
         "us.frb.industrial_production.total.mom_sa.{P}"
@@ -3740,7 +5649,7 @@
       "observation_count": 1
     },
     {
-      "uuid": "d36768f5-d533-4550-aac7-8fe066495e99",
+      "uuid": "f0b3ebdd-f2b2-4688-b8b4-325bcd9485c9",
       "concept": "usaspending.dod.new_prime_awards",
       "family_patterns": [
         "usaspending.dod.new_prime_awards"
@@ -3758,7 +5667,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "66c6b363-bcfb-49c3-b2d7-419114d7808d",
+      "uuid": "b842fec2-c251-48a9-9aea-7ad64113ee55",
       "concept": "usaspending.dod.prime_award_obligations",
       "family_patterns": [
         "usaspending.dod.prime_award_obligations"
@@ -3776,7 +5685,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "ad1f0a62-2372-4426-9eff-8feaaccb2e01",
+      "uuid": "9154e0d2-eff3-4530-af75-b363d6d88809",
       "concept": "usaspending.dod.prime_award_transactions",
       "family_patterns": [
         "usaspending.dod.prime_award_transactions"
@@ -3794,7 +5703,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "e12a0711-78b7-4516-929c-1b26888cf4d3",
+      "uuid": "dde380c6-2c4f-402c-ae36-e1f6f8c4da2c",
       "concept": "usaspending.dod.prime_contract_obligations",
       "family_patterns": [
         "usaspending.dod.prime_contract_obligations"
@@ -3812,7 +5721,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "4c300bbd-097c-4449-854b-620f110c2e96",
+      "uuid": "f9cf8a2a-dddc-4086-8ee0-12d7aa97e6c6",
       "concept": "usaspending.dod.small_business_contract_obligation_share",
       "family_patterns": [
         "usaspending.dod.small_business_contract_obligation_share"
@@ -3830,7 +5739,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "4c11c9b0-20ab-4344-96c6-9e89d1b9f340",
+      "uuid": "e00e27d8-c584-4310-ab1a-3f2dce010041",
       "concept": "usaspending.dod.unique_prime_contract_recipients",
       "family_patterns": [
         "usaspending.dod.unique_prime_contract_recipients"
@@ -3848,7 +5757,7 @@
       "observation_count": 0
     },
     {
-      "uuid": "4e30f398-c834-456f-846d-f73b155f29bc",
+      "uuid": "07209de1-43ea-4728-985b-948c9a6eb3e1",
       "concept": "usda.fsa.crp.enrolled_acres_total",
       "family_patterns": [
         "usda.fsa.crp.enrolled_acres_total"
@@ -3856,7 +5765,11 @@
       "status": "docket-only",
       "unit": "count",
       "cadence": "month",
-      "geography": null,
+      "geography": {
+        "level": "country",
+        "id": "0100000US",
+        "name": "United States"
+      },
       "entity": null,
       "sources": [],
       "aliases": [],
