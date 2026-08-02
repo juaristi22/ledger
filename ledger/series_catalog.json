@@ -6,35 +6,184 @@
   "docket_seed_sha256": "930424fb48c0be4c9e2ce17d4e0f2a6be886408e814c80324174a7a303fa0271",
   "uuid_registry_sha256": "c4ccda3f1746ff06cf8cc17dc221ea3a82b7b16a5d719361e2025bc5d7b63356",
   "suspect_segments": [],
-  "stripped_segments": [
-    "2026-05",
-    "2026-06",
-    "2026-06-18",
-    "2026-07",
-    "2026_05",
-    "2026_06",
-    "2026_06_18",
-    "2026_q2",
-    "after_june_2026",
-    "after_mpc_june_2026",
-    "april_2026",
-    "feb_2026",
-    "february_to_april_2026",
-    "fy2024",
-    "fy2025",
-    "june_2026",
-    "may_2026",
-    "q1_2026",
-    "week_2026-06-13",
-    "week_2026-06-20",
-    "week_2026-06-27",
-    "week_2026-07-04",
-    "week_2026-07-11",
-    "week_2026-07-18",
-    "week_2026-07-25",
-    "week_2026_06_13",
-    "week_ending_2026_06_06"
-  ],
+  "stripped_segments": {
+    "2026-05": [
+      "abs.cpi_indicator.allgroups.yoy",
+      "estat.jp.cpi.core_exfreshfood.yoy",
+      "ons.cpih.annual_rate",
+      "statcan.36-10-0434-01.all_industries.month_to_month_percent_change",
+      "statcan.cpi.allitems.yoy",
+      "us.bea.core_pce.mom_sa",
+      "us.census.housing_starts.total_saar",
+      "us.frb.industrial_production.total.mom_sa"
+    ],
+    "2026-06": [
+      "abs.cpi.all_groups.yoy",
+      "bls.import_price_index.all_imports_mom",
+      "census.housing_starts.saar",
+      "eurostat.ea.hicp.flash.yoy",
+      "fed.g17.capacity_utilization.total_industry",
+      "fed.g17.industrial_production.total_index_mom",
+      "us.bea.core_pce.mom_sa",
+      "us.fed.fomc.target_range_upper"
+    ],
+    "2026-06-18": [
+      "boe.bank_rate"
+    ],
+    "2026-07": [
+      "cms.care_compare.nursing_home_occupancy_pct",
+      "cms.nursing_home_compare.reported_total_nurse_staffing_hprd_us",
+      "eurostat.ea.hicp.flash.yoy"
+    ],
+    "2026_05": [
+      "estat.jp.cpi.core_exfreshfood.yoy",
+      "ons.cpih.annual_rate",
+      "us.census.housing_starts.total_saar",
+      "us.frb.industrial_production.total.mom_sa"
+    ],
+    "2026_06": [
+      "census.m3.durable_goods_new_orders_mom",
+      "census.m3.durable_goods_shipments_mom",
+      "us.fed.fomc.target_range_upper"
+    ],
+    "2026_06_18": [
+      "boe.bank_rate"
+    ],
+    "2026_q2": [
+      "bls.eci.private_wages_salaries_qoq",
+      "bls.eci.total_compensation_private_industry_qoq"
+    ],
+    "after_june_2026": [
+      "bank_of_canada.overnight_rate",
+      "boj.policy_rate_guideline",
+      "ecb.deposit_facility_rate",
+      "rba.cash_rate_target"
+    ],
+    "after_mpc_june_2026": [
+      "boe.bank_rate"
+    ],
+    "april_2026": [
+      "census.mtis.total_business_inventories_level",
+      "eurostat.industrial_production.euro_area",
+      "ons.gdp.monthly_growth",
+      "statcan.building_permits.total_value_mom.canada",
+      "statcan.employment_insurance.regular_beneficiaries.canada",
+      "statcan.gdp_by_industry.monthly_growth",
+      "statcan.retail_trade.sales_mom.canada",
+      "statcan.wholesale_trade.sales_mom_exclusions.canada"
+    ],
+    "feb_2026": [
+      "cms.medicaid_pi.beneficiaries_disenrolled_procedural",
+      "cms.medicaid_pi.beneficiaries_disenrolled_total",
+      "cms.medicaid_pi.beneficiaries_renewed_ex_parte",
+      "cms.medicaid_pi.beneficiaries_renewed_total"
+    ],
+    "february_to_april_2026": [
+      "ons.labour.unemployment_rate"
+    ],
+    "fy2024": [
+      "fns.snap.application_processing_timeliness_rate",
+      "fns.snap.overpayment_error_rate",
+      "fns.snap.total_payment_error_rate",
+      "fns.snap.underpayment_error_rate"
+    ],
+    "fy2025": [
+      "fns.snap.share_jurisdictions_at_or_above_6pct",
+      "fns.snap.total_payment_error_rate"
+    ],
+    "june_2026": [
+      "abs.labour.employment_change.australia",
+      "abs.labour.unemployment_rate.australia",
+      "bls.ces.total_nonfarm_payroll_change",
+      "bls.cpi.u.core_mom",
+      "bls.cpi.u.headline_mom",
+      "bls.cps.employed_people_by_occupation.business_financial_operations",
+      "bls.cps.employed_people_by_occupation.computer_mathematical",
+      "bls.cps.employed_people_by_occupation.healthcare_support",
+      "bls.cps.employed_people_by_occupation.office_administrative_support",
+      "bls.cps.employed_people_by_occupation.production",
+      "bls.cps.employed_people_by_occupation.transportation_material_moving",
+      "bls.cps.unemployment_rate",
+      "eurostat.hicp.all_items_annual_rate.euro_area",
+      "statjp.cpi.tokyo_all_items_annual_rate"
+    ],
+    "may_2026": [
+      "abs.building_approvals.total_dwellings_mom.australia",
+      "abs.cpi.all_groups_annual_rate.australia",
+      "abs.labour.employment_change.australia",
+      "abs.labour.unemployment_rate.australia",
+      "bea.disposable_personal_income.level",
+      "bea.government_social_benefits.level",
+      "bea.government_social_benefits.medicaid",
+      "bea.government_social_benefits.medicare",
+      "bea.government_social_benefits.social_security",
+      "bea.pce.core_mom",
+      "bea.pce_price_index.monthly_change",
+      "bea.personal_current_taxes.level",
+      "bea.wages_and_salaries.level",
+      "bls.ces.average_hourly_earnings_private_monthly_change",
+      "bls.ces.total_nonfarm_payroll_change",
+      "bls.cpi.u.core_mom",
+      "bls.cpi.u.headline_mom",
+      "bls.cps.unemployment_rate",
+      "bls.import_price_index.all_imports_mom",
+      "bls.jolts.job_openings",
+      "bls.jolts.job_openings_total",
+      "bls.ppi.final_demand_monthly_change",
+      "census.housing_starts.saar",
+      "census.marts.adv44x72.monthly_change",
+      "eurostat.hicp.all_items_annual_rate.euro_area",
+      "eurostat.retail_trade.volume_mom.euro_area",
+      "eurostat.unemployment_rate.euro_area",
+      "fed.g17.capacity_utilization.total_industry",
+      "fed.g17.industrial_production.total_index_mom",
+      "ons.cpi.annual_rate",
+      "ons.hmrc.paye_payrolled_employees",
+      "ons.pusf.j5ii.public_sector_net_borrowing_ex_banks",
+      "ons.retail_sales.volume_mom",
+      "statcan.cpi.all_items_annual_rate.canada",
+      "statcan.employment_insurance.regular_beneficiaries.canada",
+      "statcan.lfs.employment_change",
+      "statcan.lfs.unemployment_rate",
+      "statjp.cpi.all_items_annual_rate.japan",
+      "statjp.household_spending.real_yoy.two_or_more_person_households",
+      "statjp.lfs.unemployment_rate.japan",
+      "treasury.mts.monthly_deficit"
+    ],
+    "q1_2026": [
+      "bea.real_gdp.saar.third_estimate"
+    ],
+    "week_2026-06-13": [
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026-06-20": [
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026-06-27": [
+      "dol.eta.continued_claims.sa"
+    ],
+    "week_2026-07-04": [
+      "dol.eta.continued_claims.sa",
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026-07-11": [
+      "dol.eta.continued_claims.sa",
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026-07-18": [
+      "dol.eta.continued_claims.sa",
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026-07-25": [
+      "us.dol.initial_claims.sa"
+    ],
+    "week_2026_06_13": [
+      "us.dol.initial_claims.sa"
+    ],
+    "week_ending_2026_06_06": [
+      "dol.eta.initial_claims.sa"
+    ]
+  },
   "ambiguous_aliases": [],
   "series": [
     {

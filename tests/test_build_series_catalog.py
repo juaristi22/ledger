@@ -748,9 +748,10 @@ def test_committed_catalog_is_current_and_valid() -> None:
     assert bsc.validate_uuids(committed) == []
     assert bsc.registry_agreement_problems(committed, registry) == []
     assert committed["suspect_segments"] == []
-    # EVERY stripped spelling is auditable — a statute or edition label
-    # that collides with a period spelling can only be caught here.
-    assert committed["stripped_segments"] == [
+    # EVERY stripped spelling is auditable, mapped to the canonical
+    # concepts it touched — a statute or edition label colliding with a
+    # period spelling can only be caught here.
+    assert sorted(committed["stripped_segments"]) == [
         "2026-05", "2026-06", "2026-06-18", "2026-07", "2026_05",
         "2026_06", "2026_06_18", "2026_q2", "after_june_2026",
         "after_mpc_june_2026", "april_2026", "feb_2026",
@@ -760,6 +761,13 @@ def test_committed_catalog_is_current_and_valid() -> None:
         "week_2026-07-18", "week_2026-07-25", "week_2026_06_13",
         "week_ending_2026_06_06",
     ]
+    assert committed["stripped_segments"]["after_mpc_june_2026"] == [
+        "boe.bank_rate"
+    ]
+    assert all(
+        occurrences and occurrences == sorted(set(occurrences))
+        for occurrences in committed["stripped_segments"].values()
+    )
     assert committed["docket_seed_sha256"] is not None
     assert committed["uuid_registry_sha256"] == registry.sha256()
     assert bsc.DOCKET_SEED.exists()
@@ -1015,14 +1023,22 @@ def test_statute_spelling_stripped_but_audited(
 ) -> None:
     # A statute/edition label spelling the row's own period is
     # indistinguishable from a period label; it strips, but the spelling
-    # is published for curation rather than vanishing.
+    # is published — mapped to every canonical concept it touched, so a
+    # second occurrence is visible rather than absorbed into a set.
     catalog, _ = _build(
         tmp_path,
-        [_row("agency.statute.2026_05.rate",
-              rid="agency.statute.2026_05.rate.first_print")],
+        [
+            _row("agency.statute.2026_05.rate",
+                 rid="agency.statute.2026_05.rate.first_print"),
+            _row("other.report.2026_05.level",
+                 rid="other.report.2026_05.level.first_print"),
+        ],
     )
-    assert catalog["series"][0]["concept"] == "agency.statute.rate"
-    assert "2026_05" in catalog["stripped_segments"]
+    concepts = {r["concept"] for r in catalog["series"]}
+    assert concepts == {"agency.statute.rate", "other.report.level"}
+    assert catalog["stripped_segments"]["2026_05"] == [
+        "agency.statute.rate", "other.report.level",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1052,7 +1068,9 @@ def test_remint_of_retired_identity_stages_valid_chain(
     (tmp_path / "seed.json").write_text(
         json.dumps({"series": []}), encoding="utf-8"
     )
-    assert bsc.main(argv + ["--allow-remint", "--remint-note", "cut"]) == 0
+    assert bsc.main(
+        argv + ["--allow-remint", "--remint-note", "seed entry cut"]
+    ) == 0
     (tmp_path / "seed.json").write_text(json.dumps(SEED), encoding="utf-8")
     catalog = json.loads((tmp_path / "catalog.json").read_text())
     # Hand-plant a divergent uuid for the returning docket identity.
@@ -1119,3 +1137,124 @@ def test_identity_uuid_map_matches_reviewed_anchor() -> None:
     assert digest == (
         "2d2552e88662eb654597999ac92f750cadbed882703324c6f9ca1f1e3ac15345"
     )
+
+
+def test_supersede_never_recycles_a_historical_uuid(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Fourth-review repro: U1 -> U2 -> U1 restored the original map while
+    # hiding the excursion in two "valid" events.
+    path = tmp_path / "registry.jsonl"
+    mint = _mint("a.one", U1)
+    away = dict(_mint("a.one", U2), supersedes=U1, note="planned change one")
+    back = dict(_mint("a.one", U1), supersedes=U2, note="planned change two")
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in (mint, away, back)),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="recycles uuid"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_succeeds_lineage_is_consumed_once_and_dimension_bound(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    mint = _mint("a.one", U1)
+    retire = dict(_mint("a.one", U1), retired=True, note="placeholder done")
+    succ = {"concept": "a.one", "geography": None, "entity": None}
+
+    def entry(concept, uuid, **kw):
+        return dict(_mint(concept, uuid), **kw)
+
+    # Fork: two successors of one predecessor.
+    b = entry("a.one", U1, succeeds=succ,
+              entity={"name": "economy", "role": "aggregate"})
+    b_away = dict(
+        entry("a.one", U2, entity={"name": "economy", "role": "aggregate"}),
+        supersedes=U1, note="moved along again",
+    )
+    c = entry("a.one", U1, succeeds=succ,
+              entity={"name": "person", "role": "aggregate"})
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in (mint, retire, b, b_away, c)),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="consumed exactly once"):
+        bsc.UuidRegistry.load(path)
+
+    # Cross-concept lineage transfer.
+    other = entry("b.two", U1, succeeds=succ)
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in (mint, retire, other)),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="never crosses concepts"):
+        bsc.UuidRegistry.load(path)
+
+    # Predecessor with a known entity is not a placeholder.
+    known = _mint("a.one", U1,
+                  entity={"name": "economy", "role": "aggregate"})
+    known_retire = dict(known, retired=True, note="placeholder done")
+    successor = entry(
+        "a.one", U1,
+        succeeds={"concept": "a.one", "geography": None,
+                  "entity": {"name": "economy", "role": "aggregate"}},
+    )
+    path.write_text(
+        "".join(
+            json.dumps(e) + "\n" for e in (known, known_retire, successor)
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="entity-less placeholders"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_literal_placeholder_segment_is_reserved(
+    tmp_path: pathlib.Path,
+) -> None:
+    with pytest.raises(SystemExit, match="reserved placeholder"):
+        _build(tmp_path, [_row("agency.statute.{P}.rate")])
+    with pytest.raises(SystemExit, match="reserved placeholder"):
+        _build(
+            tmp_path,
+            [_row("agency.rate", rid="agency.rate.{P}.first_print")],
+        )
+
+
+@pytest.mark.parametrize(
+    "segment",
+    ["fy0000", "fy0001", "0000_01", "week_ending_0001_01_01", "q1_0000"],
+)
+def test_out_of_window_calendar_tokens_neither_strip_nor_crash(
+    segment: str,
+) -> None:
+    assert bsc.parse_period_token(segment) is None
+    pattern = bsc.family_pattern(
+        f"agency.rate.{segment}", {"type": "month", "value": "2026-05"}
+    )
+    assert pattern == f"agency.rate.{segment}"
+
+
+def test_bare_year_variant_strips_only_for_annual_rows(
+    tmp_path: pathlib.Path,
+) -> None:
+    rows = [
+        _row("agency.annual.total.2025",
+             rid="agency.annual.total.2025.final",
+             period={"type": "year", "value": "2025"}),
+        _row("agency.annual.total.2026",
+             rid="agency.annual.total.2026.final",
+             period={"type": "year", "value": "2026"}),
+    ]
+    catalog, _ = _build(tmp_path, rows)
+    assert [r["concept"] for r in catalog["series"]] == [
+        "agency.annual.total"
+    ]
+    assert catalog["series"][0]["observation_count"] == 2
+    # A bare year that is NOT the row's own period never strips.
+    pattern = bsc.family_pattern(
+        "agency.annual.total.2019", {"type": "year", "value": "2025"}
+    )
+    assert pattern == "agency.annual.total.2019"

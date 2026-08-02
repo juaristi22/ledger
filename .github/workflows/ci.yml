@@ -57,6 +57,10 @@ jobs:
             || github.event.before }}
           # New-branch pushes have an all-zero before-sha; they must still
           # extend the canonical lineage's registry rather than skipping.
+          # Trust anchor: this fallback ref is only sound because branch
+          # protection on codex/thesis-ledger-facts forbids deletions and
+          # force pushes (verified 2026-08-02); a recreated ref would
+          # otherwise compare the registry to itself.
           FALLBACK_REF: codex/thesis-ledger-facts
         run: |
           if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then

@@ -153,6 +153,15 @@ COUNTRY_GEOGRAPHY = {
 
 _YEAR_HINT = re.compile(r"(?:19|20)\d{2}")
 
+# Calendar tokens are only meaningful in a sane modern window; anything
+# outside neither strips nor crashes date arithmetic (fy0000, 0000_01,
+# week_ending_0001_01_01 were previously accepted or raised).
+_YEAR_MIN, _YEAR_MAX = 1900, 2999
+
+
+def _valid_year(year: int) -> bool:
+    return _YEAR_MIN <= year <= _YEAR_MAX
+
 _FY_RE = re.compile(r"fy(\d{4})")
 _NUMERIC_DATE_RE = re.compile(r"(\d{4})[-_](\d{2})(?:[-_](\d{2}))?")
 _MONTH_NAME_RE = re.compile(r"(%s)_(\d{4})" % _MONTH_ALT)
@@ -162,13 +171,15 @@ _WEEK_RE = re.compile(r"week_(?:ending_)?(\d{4})[-_](\d{2})[-_](\d{2})")
 
 
 def _month_span(year: int, month: int) -> tuple[dt.date, dt.date] | None:
-    if not 1 <= month <= 12:
+    if not _valid_year(year) or not 1 <= month <= 12:
         return None
     last = calendar.monthrange(year, month)[1]
     return dt.date(year, month, 1), dt.date(year, month, last)
 
 
 def _day(year: int, month: int, day: int) -> dt.date | None:
+    if not _valid_year(year):
+        return None
     try:
         return dt.date(year, month, day)
     except ValueError:
@@ -210,7 +221,8 @@ def parse_period_token(segment: str) -> tuple | None:
         return None
     m = _FY_RE.fullmatch(segment)
     if m:
-        return ("fiscal_year", int(m.group(1)))
+        year = int(m.group(1))
+        return ("fiscal_year", year) if _valid_year(year) else None
     m = _WEEK_RE.fullmatch(segment)
     if m:
         end = _day(int(m.group(1)), int(m.group(2)), int(m.group(3)))
@@ -229,7 +241,7 @@ def parse_period_token(segment: str) -> tuple | None:
     if m:
         first, last = _MONTH_NUM[m.group(1)], _MONTH_NUM[m.group(2)]
         year = int(m.group(3))
-        if first > last:
+        if first > last or not _valid_year(year):
             return None
         start = dt.date(year, first, 1)
         end = _month_span(year, last)[1]
@@ -241,6 +253,8 @@ def parse_period_token(segment: str) -> tuple | None:
     if m:
         quarter = int(m.group(1) or m.group(4))
         year = int(m.group(2) or m.group(3))
+        if not _valid_year(year):
+            return None
         start = dt.date(year, 3 * quarter - 2, 1)
         end = _month_span(year, 3 * quarter)[1]
         return ("span", (start, end))
@@ -274,7 +288,15 @@ def period_token_variants(period: dict) -> set[str]:
         return tokens
     value = str(value)
     if ptype == "fiscal_year":
-        tokens.add(f"fy{value}")
+        if value.isdigit() and _valid_year(int(value)):
+            tokens.add(f"fy{value}")
+    elif ptype == "year":
+        # Bare years are deliberately not in the token grammar (too
+        # collision-prone to strip by shape), but a segment spelling the
+        # row's OWN annual period is a direct variant and must strip, or
+        # year-suffixed annual ids split into per-year identities.
+        if value.isdigit() and _valid_year(int(value)):
+            tokens.add(value)
     elif ptype == "month":
         m = re.fullmatch(r"(\d{4})-(\d{2})", value)
         if m:
@@ -311,7 +333,7 @@ def period_descriptor(period: dict | None) -> tuple | None:
         return None
     value = str(value)
     if ptype == "fiscal_year":
-        if value.isdigit():
+        if value.isdigit() and _valid_year(int(value)):
             return ("fiscal_year", int(value))
         return None
     if ptype == "month":
@@ -339,7 +361,7 @@ def period_descriptor(period: dict | None) -> tuple | None:
             return ("span", (end - dt.timedelta(days=6), end))
         return None
     if ptype == "year":
-        if value.isdigit():
+        if value.isdigit() and _valid_year(int(value)):
             year = int(value)
             return ("span", (dt.date(year, 1, 1), dt.date(year, 12, 31)))
         return None
@@ -523,6 +545,13 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
                 f"measure.concept: {json.dumps(row)[:200]}"
             )
         period = row.get("period") or {}
+        for identifier in (concept_raw, rid):
+            if "{P}" in identifier.split("."):
+                raise SystemExit(
+                    f"observation row {index} contains the reserved "
+                    f"placeholder segment '{{P}}' in {identifier!r} — "
+                    "family patterns are derived, never supplied"
+                )
         if (
             period.get("value") is not None
             and period_descriptor(period) is None
@@ -698,8 +727,10 @@ def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
 
 
 def _usable_note(note: object) -> bool:
-    """A note must carry visible content, not just zero-width padding."""
-    return isinstance(note, str) and any(c.isalnum() for c in note)
+    """A note must say something: several words' worth of real content."""
+    if not isinstance(note, str):
+        return False
+    return len(note.strip()) >= 8 and sum(c.isalnum() for c in note) >= 4
 
 
 class UuidRegistry:
@@ -737,6 +768,9 @@ class UuidRegistry:
         self.latest: dict[tuple[str, str, str], dict] = {}
         # First owner of each 128-bit value, for the no-reuse rule.
         self.uuid_owner: dict[int, tuple[str, str, str]] = {}
+        # Retired predecessors already consumed by a succeeds event: a
+        # lineage can be handed over exactly once, never forked.
+        self.consumed: set[tuple[str, str, str]] = set()
         problems: list[str] = []
         if b"\r" in raw:
             problems.append("registry must be LF-only (CR byte found)")
@@ -812,11 +846,16 @@ class UuidRegistry:
                         f"line {lineno}: supersede for {key} is a no-op "
                         "(uuid equals supersedes)"
                     )
-                elif self.uuid_owner.get(parsed) not in (None, key):
+                elif parsed in self.uuid_owner:
+                    # Never revisit a historical value, even for the same
+                    # identity: U1 -> U2 -> U1 cycles would let the final
+                    # map and the identity anchor "return to normal" while
+                    # hiding the excursion.
                     problems.append(
-                        f"line {lineno}: supersede for {key} reuses uuid "
-                        f"{entry['uuid']} already bound to "
-                        f"{self.uuid_owner[parsed]}"
+                        f"line {lineno}: supersede for {key} recycles uuid "
+                        f"{entry['uuid']} (first bound to "
+                        f"{self.uuid_owner[parsed]}) — superseding UUIDs "
+                        "must be new to the registry"
                     )
                 if not _usable_note(entry.get("note")):
                     problems.append(
@@ -895,11 +934,54 @@ class UuidRegistry:
                 f"line {lineno}: {key} succeeds a LIVE binding "
                 f"{predecessor_key} — retire it first"
             )
+        if predecessor_key in self.consumed:
+            return (
+                f"line {lineno}: {key} succeeds {predecessor_key}, whose "
+                "lineage was already handed over — a predecessor is "
+                "consumed exactly once, never forked"
+            )
         if predecessor["uuid"] != entry["uuid"]:
             return (
                 f"line {lineno}: {key} succeeds {predecessor_key} but "
                 f"carries uuid {entry['uuid']} != {predecessor['uuid']}"
             )
+        # succeeds exists for exactly one documented move — a docket
+        # placeholder enriched into its observed identity — so it must
+        # look like one: same concept, predecessor entity unknown,
+        # geography absent or matching on level/id (and vintage when
+        # declared).
+        if succeeds.get("concept") != entry["concept"]:
+            return (
+                f"line {lineno}: {key} succeeds a different concept "
+                f"{succeeds.get('concept')!r} — lineage never crosses "
+                "concepts"
+            )
+        if succeeds.get("entity") is not None:
+            return (
+                f"line {lineno}: {key} succeeds an identity with a known "
+                "entity — only entity-less placeholders can be enriched"
+            )
+        pred_geo = succeeds.get("geography") or None
+        if pred_geo is not None:
+            entry_geo = entry.get("geography") or {}
+            if (pred_geo.get("level"), pred_geo.get("id")) != (
+                entry_geo.get("level"),
+                entry_geo.get("id"),
+            ):
+                return (
+                    f"line {lineno}: {key} succeeds an identity in a "
+                    "different geography — lineage never crosses "
+                    "level/id"
+                )
+            pred_vintage = pred_geo.get("vintage")
+            if pred_vintage is not None and pred_vintage != entry_geo.get(
+                "vintage"
+            ):
+                return (
+                    f"line {lineno}: {key} succeeds an identity with a "
+                    "conflicting geography vintage"
+                )
+        self.consumed.add(predecessor_key)
         return None
 
     @staticmethod
@@ -1137,9 +1219,24 @@ def build_catalog(
             prior_own_key = (
                 UuidRegistry.entry_key(prior) if prior is not None else None
             )
-            if (
+            prior_geo = (prior or {}).get("geography") or None
+            geo = geography or {}
+            enrichment_shaped = (
                 prior is not None
                 and prior.get("status") == "docket-only"
+                and prior.get("entity") is None
+                and (
+                    prior_geo is None
+                    or (
+                        (prior_geo.get("level"), prior_geo.get("id"))
+                        == (geo.get("level"), geo.get("id"))
+                        and prior_geo.get("vintage")
+                        in (None, geo.get("vintage"))
+                    )
+                )
+            )
+            if (
+                enrichment_shaped
                 and owner_key == prior_own_key
                 and registry.is_live(owner_key)
             ):
@@ -1188,7 +1285,7 @@ def build_catalog(
         return row_uuid
 
     all_suspects: set[str] = set()
-    all_stripped: set[str] = set()
+    stripped_map: dict[str, set[str]] = {}
     for canon_key in sorted(canonical):
         bucket = canonical[canon_key]
         concept, _, _ = canon_key
@@ -1200,7 +1297,8 @@ def build_catalog(
         curated_aliases = set(prior.get("aliases", [])) if prior else set()
         aliases = sorted((bucket["concepts"] | curated_aliases) - {concept})
         all_suspects.update(bucket["suspects"])
-        all_stripped.update(bucket["stripped"])
+        for segment in bucket["stripped"]:
+            stripped_map.setdefault(segment, set()).add(concept)
         series.append({
             "uuid": row_uuid,
             "concept": concept,
@@ -1388,7 +1486,10 @@ def build_catalog(
         ),
         "uuid_registry_sha256": None,
         "suspect_segments": sorted(all_suspects),
-        "stripped_segments": sorted(all_stripped),
+        "stripped_segments": {
+            segment: sorted(stripped_map[segment])
+            for segment in sorted(stripped_map)
+        },
         "ambiguous_aliases": ambiguous_aliases,
         "series": series,
     }
