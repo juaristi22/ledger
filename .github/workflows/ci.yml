@@ -64,7 +64,10 @@ jobs:
           FALLBACK_REF: codex/thesis-ledger-facts
         run: |
           if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
-            git fetch --no-tags --depth=1 origin "$FALLBACK_REF"
+            # Fully qualified so a same-named tag can never shadow the
+            # protected branch.
+            git fetch --no-tags --depth=1 origin \
+              "refs/heads/$FALLBACK_REF"
             BASE_SHA=FETCH_HEAD
           else
             git fetch --no-tags --depth=1 origin "$BASE_SHA"

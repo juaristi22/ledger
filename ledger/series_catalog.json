@@ -5622,6 +5622,7 @@
         "statcan"
       ],
       "aliases": [
+        "statcan.employment_insurance.regular_beneficiaries",
         "statcan.employment_insurance.regular_beneficiaries.canada.may_2026"
       ],
       "source_concepts": [
@@ -5657,7 +5658,6 @@
         "statcan"
       ],
       "aliases": [
-        "statcan.employment_insurance.regular_beneficiaries",
         "statcan.employment_insurance.regular_beneficiaries.canada.april_2026"
       ],
       "source_concepts": [

@@ -556,7 +556,12 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
             ("geography", ("level", "id", "vintage", "name")),
             ("entity", ("name", "role")),
         ):
-            domain = _dimension_problem(row.get(what) or None, allowed, what)
+            raw_dim = row.get(what)
+            if raw_dim in (None, {}):
+                continue
+            # Validate the RAW value: "" or [] must fail loudly, never
+            # collapse into the null identity.
+            domain = _dimension_problem(raw_dim, allowed, what)
             if domain:
                 raise SystemExit(f"observation row {index}: {domain}")
         if (
@@ -819,7 +824,10 @@ class UuidRegistry:
             problems.append("registry must be LF-only (CR byte found)")
         if raw and not raw.endswith(b"\n"):
             problems.append("registry must end with a newline")
-        for lineno, line in enumerate(raw.decode("utf-8").splitlines(), start=1):
+        physical_lines = raw.decode("utf-8").split("\n")
+        if physical_lines and physical_lines[-1] == "":
+            physical_lines.pop()
+        for lineno, line in enumerate(physical_lines, start=1):
             if not line.strip():
                 problems.append(f"line {lineno}: blank line")
                 continue
@@ -864,8 +872,11 @@ class UuidRegistry:
             retired = entry.get("retired")
             revived = entry.get("revived")
             succeeds = entry.get("succeeds")
+            reclaimed = entry.get("reclaimed")
             markers = sum(
-                1 for marker in (supersedes, retired, revived, succeeds)
+                1
+                for marker in (supersedes, retired, revived, succeeds,
+                               reclaimed)
                 if marker is not None
             )
             if markers > 1:
@@ -891,8 +902,29 @@ class UuidRegistry:
             elif previous is None:
                 problems.append(
                     f"line {lineno}: {key} has no prior binding to "
-                    "supersede/retire/revive"
+                    "supersede/retire/revive/reclaim"
                 )
+            elif reclaimed is not None:
+                if reclaimed is not True:
+                    problems.append(f"line {lineno}: reclaimed must be true")
+                if not (self._is_retired(previous) and key in self.consumed):
+                    problems.append(
+                        f"line {lineno}: {key} reclaims a lineage that was "
+                        "not handed over — reclaim exists only for keys "
+                        "whose predecessor was consumed by a succeeds event"
+                    )
+                if parsed in self.uuid_owner:
+                    problems.append(
+                        f"line {lineno}: reclaim for {key} reuses uuid "
+                        f"{entry['uuid']} (first bound to "
+                        f"{self.uuid_owner[parsed]}) — a reclaimed identity "
+                        "is a NEW series and mints fresh"
+                    )
+                if not _usable_note(entry.get("note")):
+                    problems.append(
+                        f"line {lineno}: reclaim for {key} requires a "
+                        "substantive note"
+                    )
             elif supersedes is not None:
                 if self._is_retired(previous):
                     problems.append(
@@ -997,6 +1029,21 @@ class UuidRegistry:
     ) -> str | None:
         if not isinstance(succeeds, dict):
             return f"line {lineno}: succeeds must be an identity object"
+        unknown = set(succeeds) - {"concept", "geography", "entity"}
+        if unknown:
+            return (
+                f"line {lineno}: succeeds has non-identity fields "
+                f"{sorted(unknown)}"
+            )
+        for what, allowed in (
+            ("geography", ("level", "id", "vintage")),
+            ("entity", ("name", "role")),
+        ):
+            domain = _dimension_problem(
+                succeeds.get(what), allowed, f"succeeds.{what}"
+            )
+            if domain:
+                return f"line {lineno}: {domain}"
         predecessor_key = self.entry_key(succeeds)
         predecessor = self.latest.get(predecessor_key)
         if predecessor is None:
@@ -1114,6 +1161,9 @@ class UuidRegistry:
             ordered["revived"] = True
         elif entry.get("succeeds") is not None:
             ordered["succeeds"] = entry["succeeds"]
+        elif entry.get("reclaimed") is not None:
+            ordered["reclaimed"] = True
+            ordered["note"] = entry["note"]
         return json.dumps(ordered, ensure_ascii=False, allow_nan=False)
 
     def stage(self, new_entries: list[dict]) -> "UuidRegistry":
@@ -1167,7 +1217,11 @@ def build_catalog(
     """
     raw = observations_path.read_bytes()
     rows = [
-        json.loads(line, parse_constant=_reject_json_constants)
+        json.loads(
+            line,
+            object_pairs_hook=_reject_duplicate_keys,
+            parse_constant=_reject_json_constants,
+        )
         for line in raw.decode().splitlines()
         if line.strip()
     ]
@@ -1307,9 +1361,21 @@ def build_catalog(
             return binding
         if binding:
             # The identity handed its lineage to a successor: terminal.
-            # Observations reappearing under the old key are a NEW series
-            # claim and mint fresh; the old UUID stays with its lineage.
-            prior = None
+            # Anything reappearing under the old key is a NEW series claim
+            # and mints fresh through an explicit reclaim event; the old
+            # UUID stays with its lineage.
+            row_uuid = str(uuid_module.uuid4())
+            plan["mints"].append(
+                dict(
+                    _registry_event(canon_key[0], geography, entity, row_uuid),
+                    reclaimed=True,
+                    note=(
+                        "identity re-established after its lineage was "
+                        "handed over"
+                    ),
+                )
+            )
+            return row_uuid
         row_uuid = prior_uuid if prior_uuid else str(uuid_module.uuid4())
         owner_key = registry.uuid_owner.get(uuid_module.UUID(row_uuid).int)
         if owner_key is not None:
@@ -1417,7 +1483,11 @@ def build_catalog(
     docket_raw = b""
     if docket_path is not None:
         docket_raw = docket_path.read_bytes()
-        docket = json.loads(docket_raw.decode())
+        docket = json.loads(
+            docket_raw.decode(),
+            object_pairs_hook=_reject_duplicate_keys,
+            parse_constant=_reject_json_constants,
+        )
         alias_tally = Counter(alias for row in series for alias in row["aliases"])
         name_rows: dict[str, list[dict]] = {}
         for row in series:

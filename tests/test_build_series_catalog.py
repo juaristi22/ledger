@@ -1419,3 +1419,209 @@ def test_out_of_window_impossible_tokens_are_flagged(segment: str) -> None:
     pattern = bsc.family_pattern(f"agency.rate.{segment}", MONTH_2026_06)
     assert pattern == f"agency.rate.{segment}"
     assert bsc.suspect_segments(pattern) == [segment]
+
+
+def test_reclaimed_mint_grammar(tmp_path: pathlib.Path) -> None:
+    path = tmp_path / "registry.jsonl"
+    succ = {"concept": "a.one", "geography": None, "entity": None}
+    base = [
+        _mint("a.one", U1),
+        dict(_mint("a.one", U1), retired=True, note="placeholder done"),
+        dict(_mint("a.one", U1), succeeds=succ,
+             entity={"name": "economy", "role": "aggregate"}),
+    ]
+    fresh = "dddddddd-4444-4444-8444-444444444444"
+    good = dict(_mint("a.one", fresh), reclaimed=True,
+                note="re-established after handover")
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in base + [good]),
+        encoding="utf-8",
+    )
+    registry = bsc.UuidRegistry.load(path)
+    assert registry.binding(("a.one", bsc._geo_key(None),
+                             bsc._entity_key(None))) == fresh
+    # Reclaim of a merely-retired (not consumed) key is invalid.
+    unconsumed = [
+        _mint("b.two", U2),
+        dict(_mint("b.two", U2), retired=True, note="ordinary retirement"),
+        dict(_mint("b.two", fresh), reclaimed=True,
+             note="not a handover case"),
+    ]
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in unconsumed), encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="not handed over"):
+        bsc.UuidRegistry.load(path)
+    # Reclaim must mint fresh, never reuse.
+    reuse = dict(_mint("a.one", U1), reclaimed=True,
+                 note="tries to take U1 back")
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in base + [reuse]),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="mints fresh"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_consumed_key_reclaims_fresh_lineage(tmp_path: pathlib.Path) -> None:
+    # Sixth-review repro: a docket entry re-forming a handed-over key must
+    # take an explicit reclaim path (previously it staged a markerless
+    # mint that its own validator rejected).
+    succ = {"concept": "census.m3.new_orders", "geography": None,
+            "entity": None}
+    entries = [
+        _mint("census.m3.new_orders", U1),
+        dict(_mint("census.m3.new_orders", U1), retired=True,
+             note="placeholder enriched"),
+        dict(_mint("census.m3.new_orders", U1), succeeds=succ,
+             geography={"level": "country", "id": "0100000US",
+                        "vintage": "current"},
+             entity={"name": "economy", "role": "aggregate"}),
+        _mint("bls.cps.unemployment_rate", U2,
+              geography={"level": "country", "id": "0100000US",
+                         "vintage": "current"},
+              entity={"name": "economy", "role": "aggregate"}),
+    ]
+    existing = {
+        "series": [
+            {
+                "uuid": U2,
+                "concept": "bls.cps.unemployment_rate",
+                "geography": dict(US),
+                "entity": {"name": "economy", "role": "aggregate"},
+                "aliases": [],
+                "status": "observed",
+            }
+        ]
+    }
+    observations = tmp_path / "obs.jsonl"
+    observations.write_text(
+        json.dumps(_row("bls.cps.unemployment_rate")) + "\n",
+        encoding="utf-8",
+    )
+    docket_path = tmp_path / "seed.json"
+    docket_path.write_text(
+        json.dumps({"series": [{"series": "census.m3.new_orders",
+                                "cadence": "monthly"}]}),
+        encoding="utf-8",
+    )
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(json.dumps(existing) + "\n", encoding="utf-8")
+    registry = _registry(tmp_path, entries)
+    catalog, plan = bsc.build_catalog(
+        observations, docket_path, bsc.ExistingCatalog(catalog_path), registry
+    )
+    docket_row = next(
+        r for r in catalog["series"] if r["status"] == "docket-only"
+    )
+    assert docket_row["uuid"] != U1  # fresh lineage, old uuid stays put
+    reclaim = next(e for e in plan["mints"] if e.get("reclaimed"))
+    assert reclaim["uuid"] == docket_row["uuid"]
+    # The enriched identity has no row in this synthetic catalog, so its
+    # live binding is a gated retire — and the staged whole must reload.
+    staged = registry.stage(
+        plan["enrich_retires"] + plan["mints"] + plan["revives"]
+        + plan["supersedes"]
+        + [dict(e, note="synthetic gate approval")
+           for e in plan["retire_pending"]]
+    )
+    assert staged.entries[-1] is not None
+
+
+def test_docket_seed_rejects_json_constants(tmp_path: pathlib.Path) -> None:
+    argv = _repo(tmp_path, [_row("bls.cps.unemployment_rate")])
+    (tmp_path / "seed.json").write_text(
+        '{"series": [{"series": "a.b", "cadence": "monthly", '
+        '"extras": {"valueScale": NaN}}]}',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="not allowed"):
+        bsc.main(argv)
+
+
+def test_observation_duplicate_members_rejected(
+    tmp_path: pathlib.Path,
+) -> None:
+    row = _row("agency.rate")
+    line = json.dumps(row)
+    line = line.replace(
+        '"geography": {', '"geography": {"level": "state", ', 1
+    )
+    observations = tmp_path / "obs.jsonl"
+    observations.write_text(
+        line.replace('"geography": {"level": "state", "level"',
+                     '"geography": {"level": "state", "level"') + "\n",
+        encoding="utf-8",
+    )
+    registry = _registry(tmp_path)
+    with pytest.raises(ValueError, match="duplicate JSON member"):
+        bsc.build_catalog(
+            observations, None,
+            bsc.ExistingCatalog(tmp_path / "catalog.json"), registry,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("geography", ""), ("geography", []), ("entity", []), ("entity", "x")],
+)
+def test_falsey_or_nonobject_dimensions_rejected(
+    tmp_path: pathlib.Path, field: str, value
+) -> None:
+    bad = _row("agency.rate")
+    bad[field] = value
+    with pytest.raises(SystemExit, match="must be an object or null"):
+        _build(tmp_path, [bad])
+
+
+def test_succeeds_schema_is_enforced(tmp_path: pathlib.Path) -> None:
+    path = tmp_path / "registry.jsonl"
+    base = [
+        _mint("a.one", U1),
+        dict(_mint("a.one", U1), retired=True, note="placeholder done"),
+    ]
+    forged = dict(
+        _mint("a.one", U1, entity={"name": "economy", "role": "aggregate"}),
+        succeeds={"concept": "a.one", "geography": None, "entity": None,
+                  "extra": "field"},
+    )
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in base + [forged]),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="non-identity fields"):
+        bsc.UuidRegistry.load(path)
+    bad_geo = dict(
+        _mint("a.one", U1, entity={"name": "economy", "role": "aggregate"}),
+        succeeds={"concept": "a.one",
+                  "geography": {"level": "country", "id": ""},
+                  "entity": None},
+    )
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in base + [bad_geo]),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="nonempty string or null"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_registry_rejects_hidden_line_separators(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    two_on_one = (
+        json.dumps(_mint("a.one", U1))
+        + " "
+        + json.dumps(_mint("a.two", U2))
+    )
+    path.write_text(two_on_one + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="not strict JSON"):
+        bsc.UuidRegistry.load(path)
+    with_vt = (
+        json.dumps(_mint("a.one", U1))
+        + "\x0b"
+        + json.dumps(_mint("a.two", U2))
+    )
+    path.write_bytes(with_vt.encode("utf-8") + b"\n")
+    with pytest.raises(SystemExit, match="not strict JSON"):
+        bsc.UuidRegistry.load(path)
