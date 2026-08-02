@@ -1258,3 +1258,164 @@ def test_bare_year_variant_strips_only_for_annual_rows(
         "agency.annual.total.2019", {"type": "year", "value": "2025"}
     )
     assert pattern == "agency.annual.total.2019"
+
+
+def test_consumed_lineage_is_terminal(tmp_path: pathlib.Path) -> None:
+    # Fifth-review repro: retire A -> B succeeds A -> B moves to U2 ->
+    # retire B -> revive A restored the banned U1 excursion via detour.
+    path = tmp_path / "registry.jsonl"
+    succ = {"concept": "a.one", "geography": None, "entity": None}
+    events = [
+        _mint("a.one", U1),
+        dict(_mint("a.one", U1), retired=True, note="placeholder done"),
+        dict(_mint("a.one", U1), succeeds=succ,
+             entity={"name": "economy", "role": "aggregate"}),
+        dict(_mint("a.one", U2,
+                   entity={"name": "economy", "role": "aggregate"}),
+             supersedes=U1, note="moved along deliberately"),
+        dict(_mint("a.one", U2,
+                   entity={"name": "economy", "role": "aggregate"}),
+             retired=True, note="successor done too"),
+        dict(_mint("a.one", U1), revived=True),
+    ]
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in events), encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="terminal"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_builder_mints_fresh_for_consumed_identity(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Observations reappearing under a handed-over identity are a NEW
+    # series claim: fresh uuid, no revival of the terminal lineage.
+    succ = {"concept": "census.m3.new_orders", "geography": None,
+            "entity": None}
+    entries = [
+        _mint("census.m3.new_orders", U1),
+        dict(_mint("census.m3.new_orders", U1), retired=True,
+             note="placeholder enriched"),
+        dict(_mint("census.m3.new_orders", U1), succeeds=succ,
+             geography={"level": "country", "id": "0100000US",
+                        "vintage": "current"},
+             entity={"name": "economy", "role": "aggregate"}),
+    ]
+    rows = [
+        _row("census.m3.new_orders"),
+        _row("census.m3.new_orders",
+             geography=None if False else {"level": "country", "id": "GB",
+                                           "vintage": "current"},
+             rid="census.m3.new_orders.gb.first_print"),
+    ]
+    catalog, plan = _build(tmp_path, rows, registry_entries=entries)
+    us_row = next(
+        r for r in catalog["series"]
+        if (r["geography"] or {}).get("id") == "0100000US"
+    )
+    gb_row = next(
+        r for r in catalog["series"]
+        if (r["geography"] or {}).get("id") == "GB"
+    )
+    assert us_row["uuid"] == U1  # the enriched successor identity
+    assert gb_row["uuid"] not in (U1, U2)  # fresh, never the old lineage
+    assert len(plan["revives"]) == 0
+
+
+def test_live_uuid_uniqueness_holds_per_event_prefix(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Two live holders of one uuid mid-sequence must fail even if a later
+    # event would "fix" the final state.
+    path = tmp_path / "registry.jsonl"
+    events = [
+        _mint("a.one", U1),
+        _mint("a.two", U2),
+        # a.two jumps onto U1 while a.one still holds it live...
+        dict(_mint("a.two", U1), supersedes=U2, note="deliberate theft"),
+        # ...and a.one is retired only afterwards.
+        dict(_mint("a.one", U1), retired=True, note="too late to matter"),
+    ]
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in events), encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="after every event"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_reserved_placeholder_rejected_in_docket_and_registry(
+    tmp_path: pathlib.Path,
+) -> None:
+    with pytest.raises(SystemExit, match="reserved placeholder"):
+        _build(
+            tmp_path,
+            [_row("agency.rate")],
+            docket={"series": [{"series": "agency.{P}.rate",
+                                "cadence": "monthly"}]},
+        )
+    path = tmp_path / "registry.jsonl"
+    path.write_text(
+        json.dumps(_mint("agency.{P}.rate", U1)) + "\n", encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="reserved placeholder"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_registry_rejects_json_constants_and_empty_dimensions(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    nan_line = (
+        '{"concept": "a.one", "geography": {"level": "country", '
+        f'"id": "US", "vintage": NaN}}, "entity": null, "uuid": "{U1}"}}'
+    )
+    path.write_text(nan_line + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="not strict JSON"):
+        bsc.UuidRegistry.load(path)
+    empty_vintage = _mint(
+        "a.one", U1,
+        geography={"level": "country", "id": "US", "vintage": ""},
+    )
+    path.write_text(json.dumps(empty_vintage) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="nonempty string or null"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_observation_dimension_domains_are_enforced(
+    tmp_path: pathlib.Path,
+) -> None:
+    bad = _row("agency.rate")
+    bad["geography"] = {"level": "country", "id": "0100000US", "vintage": ""}
+    with pytest.raises(SystemExit, match="nonempty string or null"):
+        _build(tmp_path, [bad])
+
+
+@pytest.mark.parametrize(
+    ("identifier", "period"),
+    [
+        ("agency.rate.january_1899", MONTH_2026_06),
+        ("agency.rate.january_3000", MONTH_2026_06),
+    ],
+)
+def test_boundary_year_month_names_neither_strip_nor_crash(
+    identifier: str, period: dict
+) -> None:
+    assert bsc.family_pattern(identifier, period) == identifier
+
+
+@pytest.mark.parametrize("value", ["1899-01", "3000-01"])
+def test_out_of_window_quarter_periods_are_malformed(
+    tmp_path: pathlib.Path, value: str
+) -> None:
+    with pytest.raises(SystemExit, match="malformed period"):
+        _build(
+            tmp_path,
+            [_row("agency.rate", period={"type": "quarter", "value": value})],
+        )
+
+
+@pytest.mark.parametrize("segment", ["1899_13", "2999_13", "3000_13"])
+def test_out_of_window_impossible_tokens_are_flagged(segment: str) -> None:
+    pattern = bsc.family_pattern(f"agency.rate.{segment}", MONTH_2026_06)
+    assert pattern == f"agency.rate.{segment}"
+    assert bsc.suspect_segments(pattern) == [segment]

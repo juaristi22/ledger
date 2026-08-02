@@ -151,7 +151,9 @@ COUNTRY_GEOGRAPHY = {
     "BE": {"level": "country", "id": "BE", "name": None},
 }
 
-_YEAR_HINT = re.compile(r"(?:19|20)\d{2}")
+# Wide enough to flag plausible-but-out-of-window years (1899_13,
+# 2999_13, 3000_13) without tripping on catalog table ids like 0434.
+_YEAR_HINT = re.compile(r"(?:1[89]\d{2}|2\d{3}|30\d{2})")
 
 # Calendar tokens are only meaningful in a sane modern window; anything
 # outside neither strips nor crashes date arithmetic (fy0000, 0000_01,
@@ -248,7 +250,8 @@ def parse_period_token(segment: str) -> tuple | None:
         return ("span", (start, end))
     m = _MONTH_NAME_RE.fullmatch(segment)
     if m:
-        return ("span", _month_span(int(m.group(2)), _MONTH_NUM[m.group(1)]))
+        span = _month_span(int(m.group(2)), _MONTH_NUM[m.group(1)])
+        return ("span", span) if span else None
     m = _QUARTER_RE.fullmatch(segment)
     if m:
         quarter = int(m.group(1) or m.group(4))
@@ -346,7 +349,7 @@ def period_descriptor(period: dict | None) -> tuple | None:
         m = re.fullmatch(r"(\d{4})-(\d{2})", value)
         if m:
             year, month = int(m.group(1)), int(m.group(2))
-            if not 1 <= month <= 12:
+            if not _valid_year(year) or not 1 <= month <= 12:
                 return None
             quarter = (month - 1) // 3 + 1
             start = dt.date(year, 3 * quarter - 2, 1)
@@ -546,12 +549,16 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
             )
         period = row.get("period") or {}
         for identifier in (concept_raw, rid):
-            if "{P}" in identifier.split("."):
-                raise SystemExit(
-                    f"observation row {index} contains the reserved "
-                    f"placeholder segment '{{P}}' in {identifier!r} — "
-                    "family patterns are derived, never supplied"
-                )
+            reserved = _reserved_segment_problem(identifier)
+            if reserved:
+                raise SystemExit(f"observation row {index}: {reserved}")
+        for what, allowed in (
+            ("geography", ("level", "id", "vintage", "name")),
+            ("entity", ("name", "role")),
+        ):
+            domain = _dimension_problem(row.get(what) or None, allowed, what)
+            if domain:
+                raise SystemExit(f"observation row {index}: {domain}")
         if (
             period.get("value") is not None
             and period_descriptor(period) is None
@@ -712,6 +719,41 @@ class ExistingCatalog:
         return None
 
 
+def _reserved_segment_problem(identifier: object) -> str | None:
+    """Why an identifier is unusable as a concept/series name, else None."""
+    if not isinstance(identifier, str) or not identifier:
+        return f"identifier {identifier!r} must be a nonempty string"
+    if "{P}" in identifier.split("."):
+        return (
+            f"identifier {identifier!r} contains the reserved placeholder "
+            "segment '{P}' — family patterns are derived, never supplied"
+        )
+    return None
+
+
+def _dimension_problem(value: object, allowed: tuple[str, ...],
+                       what: str) -> str | None:
+    """Geography/entity objects: null, or known keys with nonempty/null
+    string values (an empty string must never be a distinct identity from
+    an absent field)."""
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        return f"{what} must be an object or null"
+    for field, field_value in value.items():
+        if field not in allowed:
+            return f"{what}.{field} is not an identity field"
+        if field_value is not None and (
+            not isinstance(field_value, str) or not field_value
+        ):
+            return f"{what}.{field} must be a nonempty string or null"
+    return None
+
+
+def _reject_json_constants(value: str):
+    raise ValueError(f"JSON constant {value} is not allowed")
+
+
 def _reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict:
     """JSON object hook that refuses duplicate member names.
 
@@ -766,6 +808,7 @@ class UuidRegistry:
         self.raw = raw
         self.entries: list[dict] = []
         self.latest: dict[tuple[str, str, str], dict] = {}
+        live_by_uuid: dict[int, tuple[str, str, str]] = {}
         # First owner of each 128-bit value, for the no-reuse rule.
         self.uuid_owner: dict[int, tuple[str, str, str]] = {}
         # Retired predecessors already consumed by a succeeds event: a
@@ -781,15 +824,35 @@ class UuidRegistry:
                 problems.append(f"line {lineno}: blank line")
                 continue
             try:
-                entry = json.loads(line, object_pairs_hook=_reject_duplicate_keys)
+                entry = json.loads(
+                    line,
+                    object_pairs_hook=_reject_duplicate_keys,
+                    parse_constant=_reject_json_constants,
+                )
             except (json.JSONDecodeError, ValueError) as exc:
                 problems.append(f"line {lineno}: not strict JSON ({exc})")
                 continue
-            if not isinstance(entry, dict) or not isinstance(
-                entry.get("concept"), str
-            ):
-                problems.append(f"line {lineno}: missing concept")
+            if not isinstance(entry, dict):
+                problems.append(f"line {lineno}: not an object")
                 continue
+            reserved = _reserved_segment_problem(entry.get("concept"))
+            if reserved:
+                problems.append(f"line {lineno}: {reserved}")
+                continue
+            for what, allowed in (
+                ("geography", ("level", "id", "vintage")),
+                ("entity", ("name", "role")),
+            ):
+                domain = _dimension_problem(entry.get(what), allowed, what)
+                if domain:
+                    problems.append(f"line {lineno}: {domain}")
+            succeeds_field = entry.get("succeeds")
+            if isinstance(succeeds_field, dict):
+                reserved = _reserved_segment_problem(
+                    succeeds_field.get("concept")
+                )
+                if reserved:
+                    problems.append(f"line {lineno}: succeeds {reserved}")
             problem = canonical_uuid_problem(entry.get("uuid"))
             if problem:
                 problems.append(f"line {lineno}: {problem}")
@@ -886,6 +949,14 @@ class UuidRegistry:
                     problems.append(
                         f"line {lineno}: {key} revives a live binding"
                     )
+                if key in self.consumed:
+                    # A handed-over lineage is terminal: reviving it would
+                    # re-open the predecessor and recreate a banned
+                    # U1 -> U2 -> U1 excursion through an identity detour.
+                    problems.append(
+                        f"line {lineno}: {key} revives a consumed "
+                        "lineage — handed-over predecessors are terminal"
+                    )
                 if entry["uuid"] != previous["uuid"]:
                     problems.append(
                         f"line {lineno}: revive for {key} must keep uuid "
@@ -896,21 +967,25 @@ class UuidRegistry:
                     f"line {lineno}: {key} re-binds without supersedes "
                     f"(prior uuid {previous['uuid']})"
                 )
+            previous_entry = self.latest.get(key)
+            if previous_entry is not None:
+                prev_parsed = uuid_module.UUID(previous_entry["uuid"]).int
+                if not self._is_retired(previous_entry) and (
+                    live_by_uuid.get(prev_parsed) == key
+                ):
+                    del live_by_uuid[prev_parsed]
             self.entries.append(entry)
             self.latest[key] = entry
             self.uuid_owner.setdefault(parsed, key)
-        live_by_uuid: dict[int, tuple[str, str, str]] = {}
-        for key, entry in self.latest.items():
-            if self._is_retired(entry):
-                continue
-            parsed = uuid_module.UUID(entry["uuid"]).int
-            other = live_by_uuid.get(parsed)
-            if other is not None:
-                problems.append(
-                    f"live bindings {other} and {key} share uuid "
-                    f"{entry['uuid']} — retire or supersede one explicitly"
-                )
-            live_by_uuid[parsed] = key
+            if not self._is_retired(entry):
+                other = live_by_uuid.get(parsed)
+                if other is not None and other != key:
+                    problems.append(
+                        f"line {lineno}: live bindings {other} and {key} "
+                        f"share uuid {entry['uuid']} — uniqueness holds "
+                        "after every event, not just at the end"
+                    )
+                live_by_uuid[parsed] = key
         if problems:
             raise SystemExit(
                 "uuid registry invalid:\n"
@@ -1039,7 +1114,7 @@ class UuidRegistry:
             ordered["revived"] = True
         elif entry.get("succeeds") is not None:
             ordered["succeeds"] = entry["succeeds"]
-        return json.dumps(ordered, ensure_ascii=False)
+        return json.dumps(ordered, ensure_ascii=False, allow_nan=False)
 
     def stage(self, new_entries: list[dict]) -> "UuidRegistry":
         """Return a new registry with entries appended and REVALIDATED.
@@ -1091,7 +1166,11 @@ def build_catalog(
     rows whose UUID would vanish from the catalog — also gated).
     """
     raw = observations_path.read_bytes()
-    rows = [json.loads(line) for line in raw.decode().splitlines() if line.strip()]
+    rows = [
+        json.loads(line, parse_constant=_reject_json_constants)
+        for line in raw.decode().splitlines()
+        if line.strip()
+    ]
     identities = build_identities(rows)
 
     # Canonicalize each observed bucket through the existing catalog: an
@@ -1182,6 +1261,17 @@ def build_catalog(
         if prior_uuid and binding and prior_uuid != binding:
             # The catalog row disagrees with the registry: an explicit,
             # gated remint (the curator edited the row's uuid on purpose).
+            # The replacement must be new to the registry outright.
+            replacement_owner = registry.uuid_owner.get(
+                uuid_module.UUID(prior_uuid).int
+            )
+            if replacement_owner is not None:
+                raise SystemExit(
+                    f"identity {canon_key} would supersede to uuid "
+                    f"{prior_uuid}, which the registry already knows "
+                    f"(first bound to {replacement_owner}) — superseding "
+                    "UUIDs must be new"
+                )
             # A retired binding is revived first so the event chain stays
             # valid (revives are staged before supersedes).
             if not registry.is_live(canon_key):
@@ -1199,7 +1289,9 @@ def build_catalog(
                 )
             )
             return prior_uuid
-        if binding:
+        if binding and not (
+            not registry.is_live(canon_key) and canon_key in registry.consumed
+        ):
             if not registry.is_live(canon_key):
                 # A retired identity is being observed again: same UUID,
                 # explicit revive event (no ceremony — resuming an identity
@@ -1213,6 +1305,11 @@ def build_catalog(
                     )
                 )
             return binding
+        if binding:
+            # The identity handed its lineage to a successor: terminal.
+            # Observations reappearing under the old key are a NEW series
+            # claim and mint fresh; the old UUID stays with its lineage.
+            prior = None
         row_uuid = prior_uuid if prior_uuid else str(uuid_module.uuid4())
         owner_key = registry.uuid_owner.get(uuid_module.UUID(row_uuid).int)
         if owner_key is not None:
@@ -1331,6 +1428,9 @@ def build_catalog(
         seen_docket_names: set[str] = set()
         for entry in docket["series"]:
             concept = entry["series"]
+            reserved = _reserved_segment_problem(concept)
+            if reserved:
+                raise SystemExit(f"docket entry: {reserved}")
             if concept in seen_docket_names:
                 raise SystemExit(
                     f"duplicate docket series id {concept!r} — docket names "
@@ -1497,7 +1597,9 @@ def build_catalog(
 
 
 def render(catalog: dict) -> str:
-    return json.dumps(catalog, indent=2, ensure_ascii=False) + "\n"
+    return json.dumps(
+        catalog, indent=2, ensure_ascii=False, allow_nan=False
+    ) + "\n"
 
 
 def validate_uuids(catalog: dict) -> list[str]:
