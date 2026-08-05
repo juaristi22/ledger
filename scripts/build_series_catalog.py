@@ -547,21 +547,58 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
                 f"observation row {index} missing source_record_id or "
                 f"measure.concept: {json.dumps(row)[:200]}"
             )
-        period = row.get("period") or {}
+        raw_period = row.get("period")
+        if raw_period is not None and not isinstance(raw_period, dict):
+            raise SystemExit(
+                f"observation row {index}: period must be an object or null"
+            )
+        period = raw_period or {}
+        if period:
+            ptype = period.get("type")
+            if ptype not in (
+                "month", "quarter", "week_ending", "fiscal_year", "year"
+            ):
+                raise SystemExit(
+                    f"observation row {index}: unknown period type {ptype!r}"
+                )
+            if period.get("value") is None:
+                raise SystemExit(
+                    f"observation row {index}: period.value is required"
+                )
+        unit = measure.get("unit")
+        if unit is not None and (not isinstance(unit, str) or not unit):
+            raise SystemExit(
+                f"observation row {index}: measure.unit must be a nonempty "
+                "string or null"
+            )
+        raw_source = row.get("source")
+        if raw_source is not None and not isinstance(raw_source, dict):
+            raise SystemExit(
+                f"observation row {index}: source must be an object or null"
+            )
+        source_name = (raw_source or {}).get("source_name")
+        if source_name is not None and (
+            not isinstance(source_name, str) or not source_name
+        ):
+            raise SystemExit(
+                f"observation row {index}: source.source_name must be a "
+                "nonempty string or null"
+            )
         for identifier in (concept_raw, rid):
             reserved = _reserved_segment_problem(identifier)
             if reserved:
                 raise SystemExit(f"observation row {index}: {reserved}")
-        for what, allowed in (
-            ("geography", ("level", "id", "vintage", "name")),
-            ("entity", ("name", "role")),
+        for what, allowed, required in (
+            ("geography", ("level", "id", "vintage", "name"),
+             ("level", "id")),
+            ("entity", ("name", "role"), ("name", "role")),
         ):
             raw_dim = row.get(what)
             if raw_dim in (None, {}):
                 continue
             # Validate the RAW value: "" or [] must fail loudly, never
             # collapse into the null identity.
-            domain = _dimension_problem(raw_dim, allowed, what)
+            domain = _dimension_problem(raw_dim, allowed, what, required)
             if domain:
                 raise SystemExit(f"observation row {index}: {domain}")
         if (
@@ -737,10 +774,13 @@ def _reserved_segment_problem(identifier: object) -> str | None:
 
 
 def _dimension_problem(value: object, allowed: tuple[str, ...],
-                       what: str) -> str | None:
+                       what: str,
+                       required: tuple[str, ...] = ()) -> str | None:
     """Geography/entity objects: null, or known keys with nonempty/null
     string values (an empty string must never be a distinct identity from
-    an absent field)."""
+    an absent field). ``required`` fields must be present and non-null:
+    a country row with a null id would silently merge distinct places
+    under one identity key."""
     if value is None:
         return None
     if not isinstance(value, dict):
@@ -752,6 +792,9 @@ def _dimension_problem(value: object, allowed: tuple[str, ...],
             not isinstance(field_value, str) or not field_value
         ):
             return f"{what}.{field} must be a nonempty string or null"
+    for field in required:
+        if value.get(field) is None:
+            return f"{what}.{field} is required when {what} is present"
     return None
 
 
@@ -847,11 +890,13 @@ class UuidRegistry:
             if reserved:
                 problems.append(f"line {lineno}: {reserved}")
                 continue
-            for what, allowed in (
-                ("geography", ("level", "id", "vintage")),
-                ("entity", ("name", "role")),
+            for what, allowed, required in (
+                ("geography", ("level", "id", "vintage"), ("level", "id")),
+                ("entity", ("name", "role"), ("name", "role")),
             ):
-                domain = _dimension_problem(entry.get(what), allowed, what)
+                domain = _dimension_problem(
+                    entry.get(what), allowed, what, required
+                )
                 if domain:
                     problems.append(f"line {lineno}: {domain}")
             succeeds_field = entry.get("succeeds")
@@ -885,7 +930,7 @@ class UuidRegistry:
                     "supersede/retire/revive/succeeds markers"
                 )
             elif previous is None and supersedes is None and retired is None \
-                    and revived is None:
+                    and revived is None and reclaimed is None:
                 owner = self.uuid_owner.get(parsed)
                 if succeeds is not None:
                     succeeds_problem = self._succeeds_problem(
@@ -913,6 +958,12 @@ class UuidRegistry:
                         "not handed over — reclaim exists only for keys "
                         "whose predecessor was consumed by a succeeds event"
                     )
+                else:
+                    # A reclaimed identity is an ordinary lineage again:
+                    # later drops retire and later returns REVIVE the same
+                    # UUID. Leaving the key marked consumed would let every
+                    # subsequent re-add mint fresh without ceremony.
+                    self.consumed.discard(key)
                 if parsed in self.uuid_owner:
                     problems.append(
                         f"line {lineno}: reclaim for {key} reuses uuid "
@@ -1035,6 +1086,9 @@ class UuidRegistry:
                 f"line {lineno}: succeeds has non-identity fields "
                 f"{sorted(unknown)}"
             )
+        reserved = _reserved_segment_problem(succeeds.get("concept"))
+        if reserved:
+            return f"line {lineno}: succeeds {reserved}"
         for what, allowed in (
             ("geography", ("level", "id", "vintage")),
             ("entity", ("name", "role")),
@@ -1216,13 +1270,16 @@ def build_catalog(
     rows whose UUID would vanish from the catalog — also gated).
     """
     raw = observations_path.read_bytes()
+    observation_lines = raw.decode().split("\n")
+    if observation_lines and observation_lines[-1] == "":
+        observation_lines.pop()
     rows = [
         json.loads(
             line,
             object_pairs_hook=_reject_duplicate_keys,
             parse_constant=_reject_json_constants,
         )
-        for line in raw.decode().splitlines()
+        for line in observation_lines
         if line.strip()
     ]
     identities = build_identities(rows)
@@ -1507,6 +1564,11 @@ def build_catalog(
                     "must be unique or claiming becomes order-dependent"
                 )
             seen_docket_names.add(concept)
+            raw_extras = entry.get("extras")
+            if raw_extras is not None and not isinstance(raw_extras, dict):
+                raise SystemExit(
+                    f"docket entry {concept}: extras must be an object"
+                )
             cadence_word = entry.get("cadence")
             if cadence_word not in CADENCE_TO_PERIOD_TYPE:
                 raise SystemExit(

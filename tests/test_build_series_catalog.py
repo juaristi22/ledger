@@ -1625,3 +1625,147 @@ def test_registry_rejects_hidden_line_separators(
     path.write_bytes(with_vt.encode("utf-8") + b"\n")
     with pytest.raises(SystemExit, match="not strict JSON"):
         bsc.UuidRegistry.load(path)
+
+
+def test_reclaim_restores_ordinary_lineage(tmp_path: pathlib.Path) -> None:
+    # Seventh-review repro: consumption used to be permanent, so every
+    # later re-add of a reclaimed key minted ANOTHER fresh uuid without
+    # ceremony. A reclaimed identity is ordinary again: drops retire
+    # (gated) and returns REVIVE the same uuid.
+    path = tmp_path / "registry.jsonl"
+    succ = {"concept": "a.one", "geography": None, "entity": None}
+    fresh = "dddddddd-4444-4444-8444-444444444444"
+    events = [
+        _mint("a.one", U1),
+        dict(_mint("a.one", U1), retired=True, note="placeholder done"),
+        dict(_mint("a.one", U1), succeeds=succ,
+             entity={"name": "economy", "role": "aggregate"}),
+        dict(_mint("a.one", fresh), reclaimed=True,
+             note="re-established after handover"),
+        dict(_mint("a.one", fresh), retired=True,
+             note="approved retirement"),
+        dict(_mint("a.one", fresh), revived=True),
+    ]
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in events), encoding="utf-8"
+    )
+    registry = bsc.UuidRegistry.load(path)
+    key = ("a.one", bsc._geo_key(None), bsc._entity_key(None))
+    assert registry.binding(key) == fresh and registry.is_live(key)
+    # A SECOND reclaim after the revival is invalid: nothing was handed
+    # over the second time.
+    second = "eeeeeeee-5555-4555-8555-555555555555"
+    bad = events[:5] + [dict(_mint("a.one", second), reclaimed=True,
+                             note="tries to churn again")]
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in bad), encoding="utf-8"
+    )
+    with pytest.raises(SystemExit, match="not handed over"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_first_event_reclaim_marker_is_rejected(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    stray = dict(_mint("a.one", U1), reclaimed=True,
+                 note="no predecessor at all")
+    path.write_text(json.dumps(stray) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="no prior binding"):
+        bsc.UuidRegistry.load(path)
+    false_marker = dict(_mint("b.two", U2), reclaimed=False)
+    path.write_text(json.dumps(false_marker) + "\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="no prior binding"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_succeeds_missing_concept_is_a_schema_finding(
+    tmp_path: pathlib.Path,
+) -> None:
+    path = tmp_path / "registry.jsonl"
+    base = [
+        _mint("a.one", U1),
+        dict(_mint("a.one", U1), retired=True, note="placeholder done"),
+    ]
+    headless = dict(
+        _mint("a.one", U1, entity={"name": "economy", "role": "aggregate"}),
+        succeeds={"geography": None, "entity": None},
+    )
+    path.write_text(
+        "".join(json.dumps(e) + "\n" for e in base + [headless]),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="nonempty string"):
+        bsc.UuidRegistry.load(path)
+
+
+def test_incomplete_geography_never_merges_places(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Seventh-review repro: two countries with null ids collapsed into one
+    # identity showing only the first name.
+    us = _row("trade.balance")
+    us["geography"] = {"level": "country", "id": None, "vintage": "current",
+                       "name": "United States"}
+    with pytest.raises(SystemExit, match="geography.id is required"):
+        _build(tmp_path, [us])
+    entityless = _row("trade.balance")
+    entityless["entity"] = {"name": "economy", "role": None}
+    with pytest.raises(SystemExit, match="entity.role is required"):
+        _build(tmp_path, [entityless])
+    registry_path = tmp_path / "registry.jsonl"
+    registry_path.write_text(
+        json.dumps(
+            _mint("trade.balance", U1,
+                  geography={"level": "country", "id": None,
+                             "vintage": "current"})
+        ) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="geography.id is required"):
+        bsc.UuidRegistry.load(registry_path)
+
+
+def test_observation_hidden_separators_rejected(
+    tmp_path: pathlib.Path,
+) -> None:
+    two_on_one = (
+        json.dumps(_row("agency.rate"))
+        + " "
+        + json.dumps(_row("agency.other"))
+    )
+    observations = tmp_path / "obs.jsonl"
+    observations.write_text(two_on_one + "\n", encoding="utf-8")
+    with pytest.raises(json.JSONDecodeError):
+        bsc.build_catalog(
+            observations, None,
+            bsc.ExistingCatalog(tmp_path / "catalog.json"),
+            _registry(tmp_path),
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutate", "match"),
+    [
+        (lambda r: r["period"].update(type="decade"), "unknown period type"),
+        (lambda r: r["period"].update(value=None), "period.value is required"),
+        (lambda r: r.update(period="2026-05"), "period must be an object"),
+        (lambda r: r["measure"].update(unit=7), "measure.unit"),
+        (lambda r: r["source"].update(source_name=""), "source.source_name"),
+    ],
+)
+def test_observation_schema_floors(tmp_path: pathlib.Path, mutate, match):
+    row = _row("agency.rate")
+    mutate(row)
+    with pytest.raises(SystemExit, match=match):
+        _build(tmp_path, [row])
+
+
+def test_docket_extras_must_be_an_object(tmp_path: pathlib.Path) -> None:
+    with pytest.raises(SystemExit, match="extras must be an object"):
+        _build(
+            tmp_path,
+            [_row("agency.rate")],
+            docket={"series": [{"series": "some.series",
+                                "cadence": "monthly", "extras": ""}]},
+        )
