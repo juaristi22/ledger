@@ -170,6 +170,18 @@ _MONTH_NAME_RE = re.compile(r"(%s)_(\d{4})" % _MONTH_ALT)
 _MONTH_RANGE_RE = re.compile(r"(%s)_to_(%s)_(\d{4})" % (_MONTH_ALT, _MONTH_ALT))
 _QUARTER_RE = re.compile(r"q([1-4])_(\d{4})|(\d{4})_q([1-4])")
 _WEEK_RE = re.compile(r"week_(?:ending_)?(\d{4})[-_](\d{2})[-_](\d{2})")
+_TOKEN_SHAPES = (
+    _FY_RE, _NUMERIC_DATE_RE, _MONTH_NAME_RE, _MONTH_RANGE_RE, _QUARTER_RE,
+    _WEEK_RE,
+)
+
+
+def _period_shaped(segment: str) -> bool:
+    """Whether a segment merely LOOKS like a period token (any grammar
+    shape), regardless of whether it denotes a real in-window date."""
+    if segment.startswith("after_"):
+        segment = segment[len("after_"):]
+    return any(shape.fullmatch(segment) for shape in _TOKEN_SHAPES)
 
 
 def _month_span(year: int, month: int) -> tuple[dt.date, dt.date] | None:
@@ -366,7 +378,7 @@ def period_descriptor(period: dict | None) -> tuple | None:
     if ptype == "year":
         if value.isdigit() and _valid_year(int(value)):
             year = int(value)
-            return ("span", (dt.date(year, 1, 1), dt.date(year, 12, 31)))
+            return ("year", year, (dt.date(year, 1, 1), dt.date(year, 12, 31)))
         return None
     return None
 
@@ -384,12 +396,18 @@ def _matches_period(token: tuple, period_desc: tuple) -> bool:
     """
     if token[0] == "fiscal_year" and period_desc[0] == "fiscal_year":
         return token[1] == period_desc[1]
+    if token[0] == "fiscal_year" and period_desc[0] == "year":
+        # Year-grained labels must agree by NUMBER: fy2025 on a calendar-
+        # 2024 row overlaps three months, but treating that as "the row's
+        # own period" merged adjacent years end to end.
+        return token[1] == period_desc[1]
     a = _fiscal_year_span(token[1]) if token[0] == "fiscal_year" else token[1]
-    b = (
-        _fiscal_year_span(period_desc[1])
-        if period_desc[0] == "fiscal_year"
-        else period_desc[1]
-    )
+    if period_desc[0] == "fiscal_year":
+        b = _fiscal_year_span(period_desc[1])
+    elif period_desc[0] == "year":
+        b = period_desc[2]
+    else:
+        b = period_desc[1]
     return a[0] <= b[1] and b[0] <= a[1]
 
 
@@ -478,7 +496,12 @@ def suspect_segments(pattern: str) -> list[str]:
     """
     return [
         s for s in pattern.split(".")
-        if s != "{P}" and (is_period_segment(s) or _YEAR_HINT.search(s))
+        if s != "{P}"
+        and (
+            is_period_segment(s)
+            or _YEAR_HINT.search(s)
+            or _period_shaped(s)
+        )
     ]
 
 
@@ -552,6 +575,11 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
             raise SystemExit(
                 f"observation row {index}: period must be an object or null"
             )
+        if raw_period == {}:
+            raise SystemExit(
+                f"observation row {index}: period must be null when absent, "
+                "never an empty object"
+            )
         period = raw_period or {}
         if period:
             ptype = period.get("type")
@@ -570,6 +598,14 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
             raise SystemExit(
                 f"observation row {index}: measure.unit must be a nonempty "
                 "string or null"
+            )
+        raw_source_concept = measure.get("source_concept")
+        if raw_source_concept is not None and (
+            not isinstance(raw_source_concept, str) or not raw_source_concept
+        ):
+            raise SystemExit(
+                f"observation row {index}: measure.source_concept must be a "
+                "nonempty string or null"
             )
         raw_source = row.get("source")
         if raw_source is not None and not isinstance(raw_source, dict):
@@ -594,7 +630,7 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
             ("entity", ("name", "role"), ("name", "role")),
         ):
             raw_dim = row.get(what)
-            if raw_dim in (None, {}):
+            if raw_dim is None:
                 continue
             # Validate the RAW value: "" or [] must fail loudly, never
             # collapse into the null identity.
@@ -623,6 +659,7 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
                 "rid_patterns": set(),
                 "suspects": set(),
                 "stripped": set(),
+                "geo_names": set(),
                 "units": Counter(),
                 "period_types": Counter(),
                 "geography": geography,
@@ -641,6 +678,15 @@ def build_identities(rows: list[dict]) -> dict[tuple[str, str, str], dict]:
         ident["rid_patterns"].add(rid_pattern)
         ident["suspects"].update(suspect_segments(pattern))
         ident["suspects"].update(suspect_segments(rid_pattern))
+        geo_name = (geography or {}).get("name")
+        if geo_name is not None:
+            ident["geo_names"].add(geo_name)
+        if len(ident["geo_names"]) > 1:
+            raise SystemExit(
+                f"observation row {index}: geography name conflict within "
+                f"identity {key}: {sorted(ident['geo_names'])} — one "
+                "level/id/vintage cannot display as two places"
+            )
         for identifier in (concept_raw, rid):
             ident["stripped"].update(
                 segment
@@ -785,6 +831,11 @@ def _dimension_problem(value: object, allowed: tuple[str, ...],
         return None
     if not isinstance(value, dict):
         return f"{what} must be an object or null"
+    if not value:
+        return (
+            f"{what} must be null when absent, never an empty object — "
+            "the two must not spell the same identity two ways"
+        )
     for field, field_value in value.items():
         if field not in allowed:
             return f"{what}.{field} is not an identity field"
@@ -1199,6 +1250,17 @@ class UuidRegistry:
 
     @staticmethod
     def render_entry(entry: dict) -> str:
+        markers = [
+            marker
+            for marker in ("supersedes", "retired", "revived", "succeeds",
+                           "reclaimed")
+            if entry.get(marker) is not None
+        ]
+        if len(markers) > 1:
+            raise ValueError(f"event mixes markers {markers}")
+        for flag in ("retired", "revived", "reclaimed"):
+            if entry.get(flag) is not None and entry[flag] is not True:
+                raise ValueError(f"{flag} must be literally true")
         ordered = {
             "concept": entry["concept"],
             "geography": entry.get("geography"),
@@ -1545,6 +1607,17 @@ def build_catalog(
             object_pairs_hook=_reject_duplicate_keys,
             parse_constant=_reject_json_constants,
         )
+        docket_series = docket.get("series")
+        if not isinstance(docket_series, list):
+            raise SystemExit("docket.series must be a list")
+        for entry in docket_series:
+            if not isinstance(entry, dict) or not isinstance(
+                entry.get("series"), str
+            ) or not entry["series"]:
+                raise SystemExit(
+                    "every docket entry must be an object with a nonempty "
+                    f"string 'series': {json.dumps(entry)[:120]}"
+                )
         alias_tally = Counter(alias for row in series for alias in row["aliases"])
         name_rows: dict[str, list[dict]] = {}
         for row in series:
@@ -1553,7 +1626,7 @@ def build_catalog(
                 if alias_tally[alias] == 1:
                     name_rows.setdefault(alias, []).append(row)
         seen_docket_names: set[str] = set()
-        for entry in docket["series"]:
+        for entry in docket_series:
             concept = entry["series"]
             reserved = _reserved_segment_problem(concept)
             if reserved:
@@ -1568,6 +1641,14 @@ def build_catalog(
             if raw_extras is not None and not isinstance(raw_extras, dict):
                 raise SystemExit(
                     f"docket entry {concept}: extras must be an object"
+                )
+            target_unit = (raw_extras or {}).get("targetUnit")
+            if target_unit is not None and (
+                not isinstance(target_unit, str) or not target_unit
+            ):
+                raise SystemExit(
+                    f"docket entry {concept}: extras.targetUnit must be a "
+                    "nonempty string or null"
                 )
             cadence_word = entry.get("cadence")
             if cadence_word not in CADENCE_TO_PERIOD_TYPE:

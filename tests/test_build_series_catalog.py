@@ -1225,9 +1225,10 @@ def test_literal_placeholder_segment_is_reserved(
 
 @pytest.mark.parametrize(
     "segment",
-    ["fy0000", "fy0001", "0000_01", "week_ending_0001_01_01", "q1_0000"],
+    ["fy0000", "fy0001", "0000_01", "week_ending_0001_01_01", "q1_0000",
+     "9999_13", "3100_13"],
 )
-def test_out_of_window_calendar_tokens_neither_strip_nor_crash(
+def test_out_of_window_calendar_tokens_kept_and_flagged(
     segment: str,
 ) -> None:
     assert bsc.parse_period_token(segment) is None
@@ -1235,6 +1236,9 @@ def test_out_of_window_calendar_tokens_neither_strip_nor_crash(
         f"agency.rate.{segment}", {"type": "month", "value": "2026-05"}
     )
     assert pattern == f"agency.rate.{segment}"
+    # Period-SHAPED but unparseable: always a suspect, even outside the
+    # year-hint window.
+    assert bsc.suspect_segments(pattern) == [segment]
 
 
 def test_bare_year_variant_strips_only_for_annual_rows(
@@ -1769,3 +1773,99 @@ def test_docket_extras_must_be_an_object(tmp_path: pathlib.Path) -> None:
             docket={"series": [{"series": "some.series",
                                 "cadence": "monthly", "extras": ""}]},
         )
+
+
+@pytest.mark.parametrize("field", ["geography", "entity"])
+def test_empty_dimension_object_never_spells_null(
+    tmp_path: pathlib.Path, field: str
+) -> None:
+    # Eighth-review repro: null vs {} pairs collapsed into one identity.
+    bad = _row("trade.balance")
+    bad[field] = {}
+    with pytest.raises(SystemExit, match="never an empty object"):
+        _build(tmp_path, [bad])
+    registry_path = tmp_path / "registry.jsonl"
+    registry_path.write_text(
+        json.dumps(dict(_mint("trade.balance", U1), **{field: {}})) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="never an empty object"):
+        bsc.UuidRegistry.load(registry_path)
+
+
+def test_empty_period_object_rejected(tmp_path: pathlib.Path) -> None:
+    bad = _row("agency.rate")
+    bad["period"] = {}
+    with pytest.raises(SystemExit, match="never an empty object"):
+        _build(tmp_path, [bad])
+
+
+def test_docket_shape_floors(tmp_path: pathlib.Path) -> None:
+    with pytest.raises(SystemExit, match="docket.series must be a list"):
+        _build(tmp_path, [_row("agency.rate")], docket={"series": {}})
+    with pytest.raises(SystemExit, match="docket.series must be a list"):
+        _build(tmp_path, [_row("agency.rate")], docket={"series": ""})
+    with pytest.raises(SystemExit, match="nonempty string 'series'"):
+        _build(tmp_path, [_row("agency.rate")], docket={"series": [{}]})
+    with pytest.raises(SystemExit, match="targetUnit must be a nonempty"):
+        _build(
+            tmp_path,
+            [_row("agency.rate")],
+            docket={"series": [{"series": "a.b", "cadence": "monthly",
+                                "extras": {"targetUnit": {"u": "x"}}}]},
+        )
+
+
+def test_source_concept_value_floor(tmp_path: pathlib.Path) -> None:
+    bad = _row("agency.rate")
+    bad["measure"]["source_concept"] = ""
+    with pytest.raises(SystemExit, match="source_concept must be a nonempty"):
+        _build(tmp_path, [bad])
+    typed = _row("agency.rate")
+    typed["measure"]["source_concept"] = 7
+    with pytest.raises(SystemExit, match="source_concept must be a nonempty"):
+        _build(tmp_path, [typed])
+
+
+def test_render_entry_refuses_malformed_events() -> None:
+    with pytest.raises(ValueError, match="must be literally true"):
+        bsc.UuidRegistry.render_entry(
+            dict(_mint("a.one", U1), reclaimed=False)
+        )
+    with pytest.raises(ValueError, match="mixes markers"):
+        bsc.UuidRegistry.render_entry(
+            dict(_mint("a.one", U1), retired=True, revived=True,
+                 note="impossible event")
+        )
+
+
+def test_year_grain_labels_agree_by_number(tmp_path: pathlib.Path) -> None:
+    # Eighth-review repro: calendar-2024 + fy2025 and calendar-2025 +
+    # fy2026 merged end to end because the fiscal window overlaps both.
+    rows = [
+        _row("budget.total.fy2025", rid="budget.total.fy2025.final",
+             period={"type": "year", "value": "2024"}),
+        _row("budget.total.fy2026", rid="budget.total.fy2026.final",
+             period={"type": "year", "value": "2025"}),
+    ]
+    catalog, _ = _build(tmp_path, rows)
+    assert [r["concept"] for r in catalog["series"]] == [
+        "budget.total.fy2025", "budget.total.fy2026",
+    ]
+    assert sorted(catalog["suspect_segments"]) == ["fy2025", "fy2026"]
+    # Equal year-number DOES strip: the label names the row's own year.
+    same = _row("budget.total.fy2025", rid="budget.total.fy2025.final",
+                period={"type": "year", "value": "2025"})
+    catalog, _ = _build(tmp_path, [same])
+    assert catalog["series"][0]["concept"] == "budget.total"
+
+
+def test_geography_name_conflict_is_a_hard_error(
+    tmp_path: pathlib.Path,
+) -> None:
+    us = _row("trade.balance")
+    fake = _row("trade.balance",
+                period={"type": "month", "value": "2026-06"})
+    fake["geography"] = dict(US, name="Canada")
+    with pytest.raises(SystemExit, match="geography name conflict"):
+        _build(tmp_path, [us, fake])
